@@ -18,36 +18,12 @@ Example response:
 }
 ```
 
-## Upload Statement
+## List Public APIs
 
-Uploads one CSV statement file.
-
-```http
-POST /api/statements/upload
-Content-Type: multipart/form-data
-```
-
-Form field:
-
-```text
-file
-```
-
-Example response:
-
-```json
-{
-  "statementId": 1,
-  "transactionCount": 42
-}
-```
-
-## List Transactions
-
-Returns parsed transactions.
+Returns a curated list of public APIs that can be added to monitoring.
 
 ```http
-GET /api/transactions
+GET /api/public-apis
 ```
 
 Example response:
@@ -56,52 +32,136 @@ Example response:
 [
   {
     "id": 1,
-    "transactionDate": "2026-01-15",
-    "merchantName": "Netflix",
-    "description": "NETFLIX.COM",
-    "amount": 15.49,
-    "category": "Streaming"
+    "name": "GitHub API",
+    "description": "Public GitHub REST API",
+    "url": "https://api.github.com",
+    "category": "Developer Tools"
   }
 ]
 ```
 
-## List Subscriptions
+## Create Monitor
 
-Returns detected recurring subscriptions.
-
-```http
-GET /api/subscriptions
-```
-
-Example response:
-
-```json
-[
-  {
-    "id": 1,
-    "merchantName": "Netflix",
-    "category": "Streaming",
-    "estimatedMonthlyAmount": 15.49,
-    "lastChargedDate": "2026-04-15",
-    "frequency": "MONTHLY",
-    "status": "ACTIVE"
-  }
-]
-```
-
-## Update Subscription
-
-Updates user-editable subscription fields.
+Adds an API endpoint to the monitor list.
 
 ```http
-PATCH /api/subscriptions/{id}
+POST /api/monitors
 ```
 
 Example request:
 
 ```json
 {
-  "category": "Streaming",
-  "status": "ACTIVE"
+  "name": "GitHub API",
+  "url": "https://api.github.com"
+}
+```
+
+Example response:
+
+```json
+{
+  "id": 1,
+  "name": "GitHub API",
+  "url": "https://api.github.com",
+  "status": "UNKNOWN",
+  "lastStatusCode": null,
+  "lastResponseTimeMs": null,
+  "lastCheckedAt": null
+}
+```
+
+## List Monitors
+
+Returns all monitored API endpoints.
+
+```http
+GET /api/monitors
+```
+
+Example response:
+
+```json
+[
+  {
+    "id": 1,
+    "name": "GitHub API",
+    "url": "https://api.github.com",
+    "status": "UP",
+    "lastStatusCode": 200,
+    "lastResponseTimeMs": 143,
+    "lastCheckedAt": "2026-05-08T17:30:00Z"
+  }
+]
+```
+
+## Check Monitor Now
+
+Runs one manual health check for a monitored endpoint.
+
+```http
+POST /api/monitors/{id}/check-now
+```
+
+Example response:
+
+```json
+{
+  "id": 10,
+  "monitorId": 1,
+  "status": "UP",
+  "statusCode": 200,
+  "responseTimeMs": 143,
+  "checkedAt": "2026-05-08T17:30:00Z",
+  "errorMessage": null
+}
+```
+
+## List Monitor Checks
+
+Returns recent check results for one endpoint.
+
+```http
+GET /api/monitors/{id}/checks
+```
+
+Example response:
+
+```json
+[
+  {
+    "id": 10,
+    "monitorId": 1,
+    "status": "UP",
+    "statusCode": 200,
+    "responseTimeMs": 143,
+    "checkedAt": "2026-05-08T17:30:00Z",
+    "errorMessage": null
+  }
+]
+```
+
+## Investigate Monitor
+
+Uses recent check history to generate an AI incident summary.
+
+This endpoint is planned for a later version.
+
+```http
+POST /api/monitors/{id}/investigate
+```
+
+Example response:
+
+```json
+{
+  "severity": "DEGRADED",
+  "summary": "The endpoint is reachable, but response time increased during the last several checks.",
+  "likelyCause": "The upstream API may be under load or rate limiting requests.",
+  "recommendedActions": [
+    "Check the provider status page.",
+    "Increase client timeout temporarily.",
+    "Continue monitoring for the next 10 minutes."
+  ]
 }
 ```
