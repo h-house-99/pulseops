@@ -1,5 +1,8 @@
 package com.pulseops.model;
 
-public record CreateMonitorRequest(String name, String url) {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public record CreateMonitorRequest(@NotBlank String name, @NotBlank @Pattern(regexp = "^https?://.*$") String url) {
 
 }

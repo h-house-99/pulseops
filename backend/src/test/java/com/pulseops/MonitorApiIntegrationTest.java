@@ -50,6 +50,30 @@ class MonitorApiIntegrationTest {
 	}
 
 	@Test
+	void postMonitorReturnsBadRequestWhenNameIsBlank() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"\",\"url\":\"https://example.com/status\"}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void postMonitorReturnsBadRequestWhenUrlIsInvalid() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs\",\"url\":\"invalid-url\"}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void postMonitorReturnsBadRequestWhenUrlIsBlank() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs\",\"url\":\"\"}"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
 	void postMonitorThenGetMonitorsReturnsPersistedMonitor() throws Exception {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -132,6 +156,30 @@ class MonitorApiIntegrationTest {
 				.andExpect(jsonPath("$[0].checkedAt").exists())
 				.andExpect(jsonPath("$[0].errorMessage").isEmpty());
 	}
+
+	@Test
+	void getMonitorChecksReturnsLengthTwoAfterTwoChecks() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors/1/checks"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$.length()").value(2))
+				.andExpect(jsonPath("$[0].id").value(1))
+				.andExpect(jsonPath("$[0].monitorId").value(1))
+				.andExpect(jsonPath("$[1].id").value(2))
+				.andExpect(jsonPath("$[1].monitorId").value(1));
+	}
+
 
 	@Test
 	void getMonitorChecksReturnsNotFoundForUnknownMonitor() throws Exception {

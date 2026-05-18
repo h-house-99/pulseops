@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.pulseops.model.CheckResultResponse;
 import com.pulseops.model.CreateMonitorRequest;
 import com.pulseops.model.MonitorResponse;
@@ -22,7 +24,7 @@ public class MonitorController {
     }
 
     @PostMapping("/api/monitors")
-    public MonitorResponse createMonitor(@RequestBody CreateMonitorRequest request) {
+    public MonitorResponse createMonitor(@Valid @RequestBody CreateMonitorRequest request) {
         return monitorService.createMonitor(request);
     }
 

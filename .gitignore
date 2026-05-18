@@ -16,3 +16,7 @@ Desktop.ini
 # Logs
 *.log
 logs/
+
+# IDEs
+.idea/
+.vscode/
