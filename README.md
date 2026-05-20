@@ -37,6 +37,11 @@ pulseops/
   docs/
 ```
 
+## Local development
+
+- Backend (Maven): [docs/MAVEN.md](docs/MAVEN.md)
+- Frontend (Vite): [docs/VITE.md](docs/VITE.md)
+
 ## Learning Rule
 
 Build one small vertical slice at a time:

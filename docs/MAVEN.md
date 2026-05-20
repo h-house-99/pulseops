@@ -20,3 +20,4 @@ Run from `backend/` (uses the project wrapper `./mvnw`).
 - Add `-q` for quieter output (e.g. `./mvnw -q test`).
 - First run may download dependencies; needs network.
 - On Windows use `mvnw.cmd` instead of `./mvnw`.
+- For the React UI, see [VITE.md](./VITE.md).

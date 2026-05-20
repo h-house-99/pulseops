@@ -1,0 +1,68 @@
+.app-shell {
+  width: min(960px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 72px 0;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intro {
+  max-width: 640px;
+  margin: 0;
+  color: #4b5563;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.monitor-section {
+  margin-top: 48px;
+}
+
+.monitor-section h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
+}
+
+.monitor-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 720px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.monitor-card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.monitor-card p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.monitor-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #374151;
+}
+
+.status-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #166534;
+  background: #dcfce7;
+  font-size: 12px;
+  font-weight: 700;
+}
