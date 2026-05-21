@@ -6,7 +6,7 @@
 
 .eyebrow {
   margin: 0 0 12px;
-  color: #2563eb;
+  color: #3673f8;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -16,7 +16,7 @@
 .intro {
   max-width: 640px;
   margin: 0;
-  color: #4b5563;
+  color: #8c92a0;
   font-size: 18px;
   line-height: 1.6;
 }
@@ -36,9 +36,9 @@
   gap: 24px;
   max-width: 720px;
   padding: 20px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #3c3d3d;
   border-radius: 8px;
-  background: #ffffff;
+  background: #151212;
 }
 
 .monitor-card h3 {
@@ -48,21 +48,59 @@
 
 .monitor-card p {
   margin: 0;
-  color: #6b7280;
+  color: #7a8293;
 }
 
 .monitor-meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #374151;
+  color: #9d9fa1;
 }
 
 .status-pill {
   padding: 4px 10px;
   border-radius: 999px;
-  color: #166534;
-  background: #dcfce7;
   font-size: 12px;
   font-weight: 700;
+}
+
+.status-up {
+  color: #024f1f;
+  background: #85bb98;
+}
+
+.status-down {
+  color: #7f1d1d;
+  background: #fca5a5;
+}
+
+.status-unknown {
+  color: #d1d5db;
+  background: #374151;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  color: #b8bfd0;
+  background: #212223;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.icon-button:hover {
+  border-color: #3673f8;
+  color: #ffffff;
+  background: #252a31;
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid #3673f8;
+  outline-offset: 2px;
 }

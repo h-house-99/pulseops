@@ -37,7 +37,7 @@ public class MonitorService {
     }
 
     public List<MonitorResponse> getMonitors() {
-        return monitorRepository.findAll()
+        return monitorRepository.findAllByOrderByIdAsc()
                 .stream()
                 .map(monitor -> toResponse(monitor))
                 .toList();

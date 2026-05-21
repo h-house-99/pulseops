@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #111827;
-  background: #f9fafb;
+  color: #b8bfd0;
+  background: #212223;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,7 +21,7 @@ body {
 h1 {
   max-width: 720px;
   margin: 0 0 16px;
-  color: #111827;
+  color: #b8bfd0;
   font-size: 48px;
   line-height: 1.05;
 }

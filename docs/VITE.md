@@ -14,8 +14,9 @@ Run from `frontend/` (uses npm).
 
 **Full stack (local)**
 
-1. Backend: from `backend/`, run `./mvnw spring-boot:run` (API on port 8080). See [MAVEN.md](./MAVEN.md).
-2. Frontend: from `frontend/`, run `npm run dev` (UI on port 5173).
+1. Database: Postgres on port 5432 — see [POSTGRES.md](./POSTGRES.md).
+2. Backend: from `backend/`, run `./mvnw spring-boot:run` (API on port 8080). See [MAVEN.md](./MAVEN.md).
+3. Frontend: from `frontend/`, run `npm run dev` (UI on port 5173).
 
 **Tips**
 

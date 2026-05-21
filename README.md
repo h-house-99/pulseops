@@ -41,6 +41,7 @@ pulseops/
 
 - Backend (Maven): [docs/MAVEN.md](docs/MAVEN.md)
 - Frontend (Vite): [docs/VITE.md](docs/VITE.md)
+- Database (PostgreSQL): [docs/POSTGRES.md](docs/POSTGRES.md)
 
 ## Learning Rule
 

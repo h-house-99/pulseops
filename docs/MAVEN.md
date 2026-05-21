@@ -21,3 +21,4 @@ Run from `backend/` (uses the project wrapper `./mvnw`).
 - First run may download dependencies; needs network.
 - On Windows use `mvnw.cmd` instead of `./mvnw`.
 - For the React UI, see [VITE.md](./VITE.md).
+- For PostgreSQL, see [POSTGRES.md](./POSTGRES.md).
