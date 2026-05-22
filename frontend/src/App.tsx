@@ -1,6 +1,8 @@
 import './App.css'
 import { useState, useEffect } from 'react'
 
+const BASE_URL = 'http://localhost:8080/api'
+
 type Monitor = {
   id: number
   name: string
@@ -15,21 +17,25 @@ function App() {
   const [monitors, setMonitors] = useState<Monitor[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [newMonitorName, setNewMonitorName] = useState('')
+  const [newMonitorUrl, setNewMonitorUrl] = useState('')
 
   async function fetchMonitors() {
-    const response = await fetch('http://localhost:8080/api/monitors')
+    const response = await fetch(`${BASE_URL}/monitors`)
 
     if (!response.ok) {
       throw new Error('Could not load monitors.')
     }
 
-    return await response.json()
+    const data: Monitor[] = await response.json()
+
+    return data
   }
 
   async function handleCheckNow(monitorId: number) {
     try {
       setErrorMessage(null)
-      const response = await fetch(`http://localhost:8080/api/monitors/${monitorId}/check-now`, 
+      const response = await fetch(`${BASE_URL}/monitors/${monitorId}/check-now`, 
         {
           method: 'POST',
         }
@@ -43,6 +49,32 @@ function App() {
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
     }
   }
+
+  async function handleCreateMonitor(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    try {
+      setErrorMessage(null)
+      const response = await fetch(`${BASE_URL}/monitors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newMonitorName, url: newMonitorUrl }),
+      })
+      if (!response.ok) {
+        throw new Error('Could not create monitor.')
+      }
+
+      const data = await fetchMonitors()
+      setMonitors(data)
+      setNewMonitorName('')
+      setNewMonitorUrl('')
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
+    }
+  }
+
 
   useEffect(() => {
     async function loadInitialMonitors() {
@@ -69,9 +101,27 @@ function App() {
       <section className="monitor-section">
         <h2>Monitors</h2>
 
+        <form className="monitor-form" onSubmit={handleCreateMonitor}>
+          <input
+            aria-label="Monitor Name"
+            required type="text"
+            placeholder="Monitor Name"
+            value={newMonitorName}
+            onChange={(e) => setNewMonitorName(e.target.value)}
+          />
+          <input
+            aria-label="Monitor URL"
+            required type="url"
+            placeholder="Monitor URL"
+            value={newMonitorUrl}
+            onChange={(e) => setNewMonitorUrl(e.target.value)}
+          />
+          <button type="submit" disabled={!newMonitorName || !newMonitorUrl}>Add Monitor</button>
+        </form>
+
         {isLoading && <p>Loading monitors...</p>}
 
-        {errorMessage && <p>{errorMessage}</p>} 
+        {errorMessage && <p className="error-message">{errorMessage}</p>} 
 
         {!isLoading && !errorMessage && monitors.length === 0 && (
           <p>No monitors yet. Add one from the public API list next.</p>
