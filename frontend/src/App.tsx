@@ -1,17 +1,10 @@
 import './App.css'
 import { useState, useEffect } from 'react'
+import MonitorForm from './components/MonitorForm'
+import MonitorCard from './components/MonitorCard'
+import type { Monitor, CheckResult } from './types'
 
 const BASE_URL = 'http://localhost:8080/api'
-
-type Monitor = {
-  id: number
-  name: string
-  url: string
-  status: 'UNKNOWN' | 'UP' | 'DOWN'
-  lastStatusCode: number | null
-  lastResponseTimeMs: number | null
-  lastCheckedAt: string | null
-}
 
 function App() {
   const [monitors, setMonitors] = useState<Monitor[]>([])
@@ -19,6 +12,10 @@ function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [newMonitorName, setNewMonitorName] = useState('')
   const [newMonitorUrl, setNewMonitorUrl] = useState('')
+  const [expandedMonitorIds, setExpandedMonitorIds] = useState<number[]>([])
+  const [checksByMonitorId, setChecksByMonitorId] = useState<Record<number, CheckResult[]>>({})
+  const [loadingCheckMonitorIds, setLoadingCheckMonitorIds] = useState<number[]>([])
+  const [checksErrorByMonitorId, setChecksErrorByMonitorId] = useState<Record<number, string | null>>({})
 
   async function fetchMonitors() {
     const response = await fetch(`${BASE_URL}/monitors`)
@@ -32,10 +29,19 @@ function App() {
     return data
   }
 
+  async function fetchCheckResults(monitorId: number) {
+    const response = await fetch(`${BASE_URL}/monitors/${monitorId}/checks/recent`)
+    if (!response.ok) {
+      throw new Error('Could not load check results.')
+    }
+    const data: CheckResult[] = await response.json()
+    return data
+  }
+
   async function handleCheckNow(monitorId: number) {
     try {
       setErrorMessage(null)
-      const response = await fetch(`${BASE_URL}/monitors/${monitorId}/check-now`, 
+      const response = await fetch(`${BASE_URL}/monitors/${monitorId}/check-now`,
         {
           method: 'POST',
         }
@@ -75,10 +81,39 @@ function App() {
     }
   }
 
+  async function handleToggleChecks(monitorId: number) {
+    const isExpanded = expandedMonitorIds.includes(monitorId)
+
+    if (isExpanded) {
+      setExpandedMonitorIds((currentIds) => currentIds.filter(id => id !== monitorId))
+      return
+    }
+
+    setExpandedMonitorIds((currentIds) => [...currentIds, monitorId])
+
+    if (checksByMonitorId[monitorId]) {
+      return
+    }
+
+    try {
+      setLoadingCheckMonitorIds((currentIds) => [...currentIds, monitorId])
+      setChecksErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
+
+      const data: CheckResult[] = await fetchCheckResults(monitorId)
+
+      setChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: data }))
+    } catch (error) {
+      setChecksErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+    } finally {
+      setLoadingCheckMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
+    }
+  }
+
+
 
   useEffect(() => {
     async function loadInitialMonitors() {
-      try{
+      try {
         const data = await fetchMonitors()
         setMonitors(data)
         setErrorMessage(null)
@@ -101,45 +136,33 @@ function App() {
       <section className="monitor-section">
         <h2>Monitors</h2>
 
-        <form className="monitor-form" onSubmit={handleCreateMonitor}>
-          <input
-            aria-label="Monitor Name"
-            required type="text"
-            placeholder="Monitor Name"
-            value={newMonitorName}
-            onChange={(e) => setNewMonitorName(e.target.value)}
-          />
-          <input
-            aria-label="Monitor URL"
-            required type="url"
-            placeholder="Monitor URL"
-            value={newMonitorUrl}
-            onChange={(e) => setNewMonitorUrl(e.target.value)}
-          />
-          <button type="submit" disabled={!newMonitorName || !newMonitorUrl}>Add Monitor</button>
-        </form>
+        <MonitorForm
+          name={newMonitorName}
+          url={newMonitorUrl}
+          onNameChange={setNewMonitorName}
+          onUrlChange={setNewMonitorUrl}
+          onSubmit={handleCreateMonitor}
+        />
 
         {isLoading && <p>Loading monitors...</p>}
 
-        {errorMessage && <p className="error-message">{errorMessage}</p>} 
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
 
         {!isLoading && !errorMessage && monitors.length === 0 && (
           <p>No monitors yet. Add one from the public API list next.</p>
         )}
 
         {monitors.map((monitor) => (
-          <div className="monitor-card" key={monitor.id}>
-            <div>
-              <h3>{monitor.name}</h3>
-              <p>{monitor.url}</p>
-            </div>
-
-            <div className="monitor-meta">
-              <button className="icon-button" aria-label={`Check ${monitor.name} now`} onClick={() => handleCheckNow(monitor.id)}>↻</button>
-              <span className={`status-pill status-${monitor.status.toLowerCase()}`}>{monitor.status}</span>
-              <span>{monitor.lastResponseTimeMs === null ? '-' : `${monitor.lastResponseTimeMs}ms`}</span>
-            </div>
-          </div>
+          <MonitorCard
+            key={monitor.id}
+            monitor={monitor}
+            onCheckNow={handleCheckNow}
+            isExpanded={expandedMonitorIds.includes(monitor.id)}
+            checks={checksByMonitorId[monitor.id] ?? []}
+            isChecksLoading={loadingCheckMonitorIds.includes(monitor.id)}
+            checksErrorMessage={checksErrorByMonitorId[monitor.id] ?? null}
+            onToggleChecks={() => handleToggleChecks(monitor.id)}
+          />
         ))}
 
       </section>

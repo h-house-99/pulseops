@@ -66,7 +66,7 @@ public class MonitorService {
         Monitor monitor = monitorRepository.findById(monitorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
 
-        return checkResultRepository.findByMonitorId(monitor.getId())
+        return checkResultRepository.findTop5ByMonitorIdOrderByCheckedAtDesc(monitor.getId())
                 .stream()
                 .map(checkResult -> toCheckResultResponse(checkResult))
                 .toList();

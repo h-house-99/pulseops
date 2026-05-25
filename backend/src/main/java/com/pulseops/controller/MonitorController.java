@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
-
 import com.pulseops.model.CheckResultResponse;
 import com.pulseops.model.CreateMonitorRequest;
 import com.pulseops.model.MonitorResponse;
 import com.pulseops.service.MonitorService;
+
+import jakarta.validation.Valid;
 
 @RestController
 public class MonitorController {
@@ -38,7 +38,7 @@ public class MonitorController {
         return monitorService.checkMonitorNow(id);
     }
 
-    @GetMapping("/api/monitors/{id}/checks")
+    @GetMapping("/api/monitors/{id}/checks/recent")
     public List<CheckResultResponse> getMonitorChecks(@PathVariable long id) {
         return monitorService.getChecksForMonitor(id);
     }
