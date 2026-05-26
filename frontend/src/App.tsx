@@ -51,6 +51,16 @@ function App() {
       }
       const data = await fetchMonitors()
       setMonitors(data)
+      if (expandedMonitorIds.includes(monitorId)) {
+        const checkData = await fetchCheckResults(monitorId)
+        setChecksByMonitorId((currentChecks) => ({ ...currentChecks, [monitorId]: checkData }))
+      } else {
+        setChecksByMonitorId((currentChecks) => {
+          const newChecks = { ...currentChecks }
+          delete newChecks[monitorId]
+          return newChecks
+        })
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
     }
