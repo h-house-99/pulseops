@@ -232,10 +232,10 @@ If the monitor does not exist, the backend returns `404`.
 
 ## List Monitor Checks
 
-Returns check history for one monitor.
+Returns 5 recent checks for one monitor.
 
 ```http
-GET /api/monitors/{id}/checks
+GET /api/monitors/{id}/checks/recent
 ```
 
 Example response:

@@ -16,6 +16,7 @@ function App() {
   const [checksByMonitorId, setChecksByMonitorId] = useState<Record<number, CheckResult[]>>({})
   const [loadingCheckMonitorIds, setLoadingCheckMonitorIds] = useState<number[]>([])
   const [checksErrorByMonitorId, setChecksErrorByMonitorId] = useState<Record<number, string | null>>({})
+  const [checkingMonitorIds, setCheckingMonitorIds] = useState<number[]>([])
 
   async function fetchMonitors() {
     const response = await fetch(`${BASE_URL}/monitors`)
@@ -29,7 +30,7 @@ function App() {
     return data
   }
 
-  async function fetchCheckResults(monitorId: number) {
+  async function fetchRecentChecks(monitorId: number) {
     const response = await fetch(`${BASE_URL}/monitors/${monitorId}/checks/recent`)
     if (!response.ok) {
       throw new Error('Could not load check results.')
@@ -41,6 +42,7 @@ function App() {
   async function handleCheckNow(monitorId: number) {
     try {
       setErrorMessage(null)
+      setCheckingMonitorIds((currentValues) => [...currentValues, monitorId])
       const response = await fetch(`${BASE_URL}/monitors/${monitorId}/check-now`,
         {
           method: 'POST',
@@ -52,17 +54,19 @@ function App() {
       const data = await fetchMonitors()
       setMonitors(data)
       if (expandedMonitorIds.includes(monitorId)) {
-        const checkData = await fetchCheckResults(monitorId)
+        const checkData = await fetchRecentChecks(monitorId)
         setChecksByMonitorId((currentChecks) => ({ ...currentChecks, [monitorId]: checkData }))
       } else {
         setChecksByMonitorId((currentChecks) => {
-          const newChecks = { ...currentChecks }
-          delete newChecks[monitorId]
-          return newChecks
+          const nextChecks = { ...currentChecks }
+          delete nextChecks[monitorId]
+          return nextChecks
         })
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
+    } finally {
+      setCheckingMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
     }
   }
 
@@ -91,7 +95,7 @@ function App() {
     }
   }
 
-  async function handleToggleChecks(monitorId: number) {
+  async function handleToggleCheckHistory(monitorId: number) {
     const isExpanded = expandedMonitorIds.includes(monitorId)
 
     if (isExpanded) {
@@ -109,7 +113,7 @@ function App() {
       setLoadingCheckMonitorIds((currentIds) => [...currentIds, monitorId])
       setChecksErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
 
-      const data: CheckResult[] = await fetchCheckResults(monitorId)
+      const data: CheckResult[] = await fetchRecentChecks(monitorId)
 
       setChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: data }))
     } catch (error) {
@@ -170,8 +174,9 @@ function App() {
             isExpanded={expandedMonitorIds.includes(monitor.id)}
             checks={checksByMonitorId[monitor.id] ?? []}
             isChecksLoading={loadingCheckMonitorIds.includes(monitor.id)}
+            isChecking={checkingMonitorIds.includes(monitor.id)}
             checksErrorMessage={checksErrorByMonitorId[monitor.id] ?? null}
-            onToggleChecks={() => handleToggleChecks(monitor.id)}
+            onToggleChecks={() => handleToggleCheckHistory(monitor.id)}
           />
         ))}
 

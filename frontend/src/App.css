@@ -56,6 +56,22 @@
   font-size: 14px;
 }
 
+.check-history-header, 
+.check-history li {
+  display: grid;
+  grid-template-columns: 80px 64px 80px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.check-history-header {
+  margin-bottom: 8px;
+  color: #7a8293;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .check-history ul {
   display: grid;
   gap: 8px;
@@ -65,12 +81,12 @@
 }
 
 .check-history li {
-  display: grid;
-  grid-template-columns: auto auto auto 1fr;
-  gap: 12px;
-  align-items: center;
   color: #9d9fa1;
   font-size: 14px;
+}
+
+.check-history .status-pill {
+  justify-self: start;
 }
 
 .monitor-card h3 {

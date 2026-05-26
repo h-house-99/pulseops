@@ -6,6 +6,7 @@ type MonitorCardProps = {
     isExpanded: boolean
     checks: CheckResult[]
     isChecksLoading: boolean
+    isChecking: boolean
     checksErrorMessage: string | null
     onToggleChecks: () => void
 }
@@ -16,6 +17,7 @@ function MonitorCard({
     isExpanded,
     checks,
     isChecksLoading,
+    isChecking,
     checksErrorMessage,
     onToggleChecks,
 }: MonitorCardProps) {
@@ -27,7 +29,7 @@ function MonitorCard({
                     <p>{monitor.url}</p>
                 </div>
                 <div className="monitor-meta">
-                    <button className="icon-button" aria-label={`Check ${monitor.name} now`} onClick={() => onCheckNow(monitor.id)}>↻</button>
+                    <button className="icon-button" aria-label={`Check ${monitor.name} now`} onClick={() => onCheckNow(monitor.id)} disabled={isChecking}>{isChecking ? '...' : '↻'}</button>
                     <span className={`status-pill status-${monitor.status.toLowerCase()}`}>{monitor.status}</span>
                     <span>{monitor.lastResponseTimeMs === null ? '-' : `${monitor.lastResponseTimeMs}ms`}</span>
                     <button
@@ -42,6 +44,12 @@ function MonitorCard({
             {isExpanded && (
                 <div className="check-history">
                     <h4>Recent checks</h4>
+                    <div className="check-history-header">
+                        <span>Status</span>
+                        <span>Code</span>
+                        <span>Latency</span>
+                        <span>Checked</span>
+                    </div>
 
                     {isChecksLoading && <p>Loading checks...</p>}
 
@@ -60,7 +68,14 @@ function MonitorCard({
                                     </span>
                                     <span>{check.statusCode ?? '-'}</span>
                                     <span>{check.responseTimeMs === null ? '-' : `${check.responseTimeMs}ms`}</span>
-                                    <span>{new Date(check.checkedAt).toLocaleString()}</span>
+                                    <span>
+                                        {new Date(check.checkedAt).toLocaleString([], {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: 'numeric',
+                                            minute: '2-digit',
+                                        })}
+                                    </span>
                                 </li>
                             ))}
                         </ul>
