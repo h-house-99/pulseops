@@ -14,8 +14,8 @@ function App() {
   const [newMonitorUrl, setNewMonitorUrl] = useState('')
   const [expandedMonitorIds, setExpandedMonitorIds] = useState<number[]>([])
   const [checksByMonitorId, setChecksByMonitorId] = useState<Record<number, CheckResult[]>>({})
-  const [loadingCheckMonitorIds, setLoadingCheckMonitorIds] = useState<number[]>([])
-  const [checksErrorByMonitorId, setChecksErrorByMonitorId] = useState<Record<number, string | null>>({})
+  const [loadingHistoryMonitorIds, setLoadingHistoryMonitorIds] = useState<number[]>([])
+  const [historyErrorByMonitorId, setHistoryErrorByMonitorId] = useState<Record<number, string | null>>({})
   const [checkingMonitorIds, setCheckingMonitorIds] = useState<number[]>([])
 
   async function fetchMonitors() {
@@ -110,16 +110,16 @@ function App() {
     }
 
     try {
-      setLoadingCheckMonitorIds((currentIds) => [...currentIds, monitorId])
-      setChecksErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
+      setLoadingHistoryMonitorIds((currentIds) => [...currentIds, monitorId])
+      setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
 
       const data: CheckResult[] = await fetchRecentChecks(monitorId)
 
       setChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: data }))
     } catch (error) {
-      setChecksErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+      setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
     } finally {
-      setLoadingCheckMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
+      setLoadingHistoryMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
     }
   }
 
@@ -173,10 +173,10 @@ function App() {
             onCheckNow={handleCheckNow}
             isExpanded={expandedMonitorIds.includes(monitor.id)}
             checks={checksByMonitorId[monitor.id] ?? []}
-            isChecksLoading={loadingCheckMonitorIds.includes(monitor.id)}
+            isHistoryLoading={loadingHistoryMonitorIds.includes(monitor.id)}
             isChecking={checkingMonitorIds.includes(monitor.id)}
-            checksErrorMessage={checksErrorByMonitorId[monitor.id] ?? null}
-            onToggleChecks={() => handleToggleCheckHistory(monitor.id)}
+            historyErrorMessage={historyErrorByMonitorId[monitor.id] ?? null}
+            onToggleCheckHistory={() => handleToggleCheckHistory(monitor.id)}
           />
         ))}
 

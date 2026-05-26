@@ -6,8 +6,7 @@ This document defines what version 1 includes and what it intentionally skips.
 
 Users can:
 
-- view a curated list of public APIs
-- add an API endpoint to the monitor list
+- add a custom API endpoint to the monitor list
 - manually run a health check
 - see whether the endpoint is up or down
 - see status code, response time, and last checked time
