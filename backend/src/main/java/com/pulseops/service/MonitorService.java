@@ -57,26 +57,32 @@ public class MonitorService {
 
         monitor.updateAfterCheck(status, statusCode, responseTimeMs, checkedAt);
         monitorRepository.save(monitor);
-        CheckResult checkResult = new CheckResult(monitor.getId(), status, statusCode, responseTimeMs, checkedAt, errorMessage);
+        CheckResult checkResult = new CheckResult(monitor, status, statusCode, responseTimeMs, checkedAt, errorMessage);
         checkResultRepository.save(checkResult);
-        return toCheckResultResponse(checkResult);
+        return toCheckResultResponse(checkResult, monitor.getId());
     }
 
     public List<CheckResultResponse> getChecksForMonitor(long monitorId) {
         Monitor monitor = monitorRepository.findById(monitorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
 
-        return checkResultRepository.findTop5ByMonitorIdOrderByCheckedAtDesc(monitor.getId())
+        return checkResultRepository.findTop5ByMonitorOrderByCheckedAtDesc(monitor)
                 .stream()
-                .map(checkResult -> toCheckResultResponse(checkResult))
+                .map(checkResult -> toCheckResultResponse(checkResult, monitorId))
                 .toList();
+    }
+
+    public void deleteMonitor(long monitorId) {
+        Monitor monitor = monitorRepository.findById(monitorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
+        monitorRepository.delete(monitor);
     }
 
     private MonitorResponse toResponse(Monitor monitor) {
         return new MonitorResponse(monitor.getId(), monitor.getName(), monitor.getUrl(), monitor.getStatus(), monitor.getLastStatusCode(), monitor.getLastResponseTimeMs(), monitor.getLastCheckedAt());
     }
 
-    private CheckResultResponse toCheckResultResponse(CheckResult checkResult) {
-        return new CheckResultResponse(checkResult.getId(), checkResult.getMonitorId(), checkResult.getStatus(), checkResult.getStatusCode(), checkResult.getResponseTimeMs(), checkResult.getCheckedAt(), checkResult.getErrorMessage());
+    private CheckResultResponse toCheckResultResponse(CheckResult checkResult, long monitorId) {
+        return new CheckResultResponse(checkResult.getId(), monitorId, checkResult.getStatus(), checkResult.getStatusCode(), checkResult.getResponseTimeMs(), checkResult.getCheckedAt(), checkResult.getErrorMessage());
     }
 }

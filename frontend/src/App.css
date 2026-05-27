@@ -159,6 +159,18 @@
   outline-offset: 2px;
 }
 
+.danger-button {
+  opacity: 0.55;
+}
+
+.danger-button:hover,
+.danger-button:focus-visible {
+  opacity: 1;
+  border-color: #fca5a5;
+  color: #fca5a5;
+  background: #2a1717;
+}
+
 .monitor-form {
   display: grid;
   grid-template-columns: 1fr 1.6fr auto;

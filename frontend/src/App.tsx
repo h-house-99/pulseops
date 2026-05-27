@@ -123,6 +123,38 @@ function App() {
     }
   }
 
+  async function handleDeleteMonitor(monitorId: number) {
+    try {
+      setErrorMessage(null)
+      const shouldDelete = window.confirm(`Delete this monitor? This will also delete its check history.`)
+      if (!shouldDelete) {
+        return
+      }
+      const response = await fetch(`${BASE_URL}/monitors/${monitorId}`, {
+        method: 'DELETE',
+      })
+      if (!(response.status === 204)) {
+        throw new Error(`Could not delete monitor ${monitorId}.`)
+      }
+      const data = await fetchMonitors()
+      setMonitors(data)
+      setExpandedMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
+      setChecksByMonitorId(currentChecks => {
+        const nextChecks = { ...currentChecks }
+        delete nextChecks[monitorId]
+        return nextChecks
+      })
+      setHistoryErrorByMonitorId(currentErrors => {
+        const nextErrors = { ...currentErrors }
+        delete nextErrors[monitorId]
+        return nextErrors
+      })
+      setLoadingHistoryMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
+      setCheckingMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
+    }
+  }
 
 
   useEffect(() => {
@@ -163,7 +195,7 @@ function App() {
         {errorMessage && <p className="error-message">{errorMessage}</p>}
 
         {!isLoading && !errorMessage && monitors.length === 0 && (
-          <p>No monitors yet. Add one from the public API list next.</p>
+          <p>No monitors yet. Add one above.</p>
         )}
 
         {monitors.map((monitor) => (
@@ -177,6 +209,7 @@ function App() {
             isChecking={checkingMonitorIds.includes(monitor.id)}
             historyErrorMessage={historyErrorByMonitorId[monitor.id] ?? null}
             onToggleCheckHistory={() => handleToggleCheckHistory(monitor.id)}
+            onDeleteMonitor={() => handleDeleteMonitor(monitor.id)}
           />
         ))}
 

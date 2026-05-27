@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -242,6 +243,33 @@ class MonitorApiIntegrationTest {
 				.andExpect(jsonPath("$[0].checkedAt").exists())
 				.andExpect(jsonPath("$[0].errorMessage").value("Request timed out"));
 
+	}
+
+	@Test
+	void deleteMonitorRemovesMonitorAndCheckResults() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(delete("/api/monitors/1"))
+				.andExpect(status().isNoContent());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(0));
+
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void deleteMonitorReturnsNotFoundForUnknownMonitor() throws Exception {
+		mockMvc.perform(delete("/api/monitors/1"))
+				.andExpect(status().isNotFound());
 	}
 
 	@TestConfiguration

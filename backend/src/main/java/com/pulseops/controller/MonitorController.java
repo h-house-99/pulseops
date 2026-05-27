@@ -2,10 +2,13 @@ package com.pulseops.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pulseops.model.CheckResultResponse;
@@ -41,5 +44,11 @@ public class MonitorController {
     @GetMapping("/api/monitors/{id}/checks/recent")
     public List<CheckResultResponse> getMonitorChecks(@PathVariable long id) {
         return monitorService.getChecksForMonitor(id);
+    }
+
+    @DeleteMapping("/api/monitors/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMonitor(@PathVariable long id) {
+        monitorService.deleteMonitor(id);
     }
 }

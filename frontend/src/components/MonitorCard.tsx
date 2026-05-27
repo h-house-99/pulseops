@@ -9,6 +9,7 @@ type MonitorCardProps = {
   isChecking: boolean
   historyErrorMessage: string | null
   onToggleCheckHistory: () => void
+  onDeleteMonitor: () => void
 }
 
 function formatCheckedAt(checkedAt: string) {
@@ -29,6 +30,7 @@ function MonitorCard({
   isChecking,
   historyErrorMessage,
   onToggleCheckHistory,
+  onDeleteMonitor,
 }: MonitorCardProps) {
   return (
     <div className="monitor-card">
@@ -57,6 +59,13 @@ function MonitorCard({
             onClick={onToggleCheckHistory}
           >
             {isExpanded ? '⌃' : '⌄'}
+          </button>
+          <button
+            className="icon-button danger-button"
+            aria-label={`Delete ${monitor.name}`}
+            onClick={onDeleteMonitor}
+          >
+            ×
           </button>
         </div>
       </div>
