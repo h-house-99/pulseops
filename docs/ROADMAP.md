@@ -1,21 +1,23 @@
-# Features
+# Roadmap
 
-This document defines what version 1 includes and what it intentionally skips.
+This document separates what PulseOps supports today from planned future work.
 
 ## Version 1
 
 Users can:
 
-- view a curated list of public APIs
-- add an API endpoint to the monitor list
+- add a custom API endpoint to the monitor list
 - manually run a health check
 - see whether the endpoint is up or down
 - see status code, response time, and last checked time
 - view recent check history for an endpoint
+- delete a monitor and its check history
+
+The backend also includes a curated public API list endpoint. A frontend discovery flow can be added later.
 
 ## Not In Version 1
 
-The first version will not include:
+The first version does not include:
 
 - login or user accounts
 - scheduled background checks
@@ -27,17 +29,15 @@ The first version will not include:
 
 ## Version 2
 
-Users can:
+Possible next features:
 
-- run scheduled checks
-- see uptime percentage
-- see error rate
-- view basic incident records
-- ask an AI assistant to explain recent failures
+- scheduled checks
+- uptime percentage
+- error rate
+- basic incident records
+- frontend discovery flow for curated public APIs
 
 ## Later Ideas
-
-Possible future additions:
 
 - AI-generated incident summaries
 - AI-suggested debugging steps

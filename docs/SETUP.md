@@ -1,0 +1,96 @@
+# Setup
+
+This guide covers local development for the PulseOps frontend, backend, and database.
+
+## Prerequisites
+
+- Java 26 or a compatible JDK for the current Spring Boot setup
+- Node.js 20+ and npm
+- PostgreSQL
+
+## Database
+
+Local development expects PostgreSQL on `localhost:5432` with a database named `pulseops`.
+
+```bash
+createdb pulseops
+```
+
+The backend reads database settings from Spring configuration. Copy the example environment file and fill in local values:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Example environment values:
+
+```bash
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pulseops
+export SPRING_DATASOURCE_USERNAME=your_postgres_username
+export SPRING_DATASOURCE_PASSWORD=your_postgres_password
+```
+
+Spring Boot creates or updates the `monitors` and `check_results` tables on startup using Hibernate.
+
+If you run the backend from a terminal, load the local environment file before starting Spring Boot:
+
+```bash
+cd backend
+set -a
+source .env
+set +a
+./mvnw spring-boot:run
+```
+
+`set -a` exports the variables loaded from `.env` so Spring Boot can read them.
+
+If you run from VS Code or Cursor, configure the Java launch profile to use `backend/.env` as its `envFile` instead of sourcing it manually each time.
+
+Useful PostgreSQL commands:
+
+| Task | Command |
+|------|---------|
+| Check if Postgres is running | `pg_isready -h localhost -p 5432` |
+| Start with Homebrew | `brew services start postgresql@16` |
+| Stop with Homebrew | `brew services stop postgresql@16` |
+| Connect to the database | `psql -h localhost -p 5432 -d pulseops` |
+| List databases | `psql -h localhost -p 5432 -l` |
+
+Replace `postgresql@16` with your installed PostgreSQL version if needed.
+
+## Backend
+
+Run backend commands from `backend/`.
+
+| Task | Command |
+|------|---------|
+| Start API | `./mvnw spring-boot:run` |
+| Run tests | `./mvnw test` |
+| Compile | `./mvnw compile` |
+| Package JAR | `./mvnw package` |
+| Run one test class | `./mvnw test -Dtest=MonitorApiIntegrationTest` |
+
+The API runs at `http://localhost:8080` by default.
+
+Automated tests use an in-memory H2 database configured in `backend/src/test/resources/application.properties`.
+
+## Frontend
+
+Run frontend commands from `frontend/`.
+
+| Task | Command |
+|------|---------|
+| Install dependencies | `npm install` |
+| Start dev server | `npm run dev` |
+| Lint | `npm run lint` |
+| Production build | `npm run build` |
+| Preview production build | `npm run preview` |
+
+The frontend runs at `http://localhost:5173` by default and calls the backend at `http://localhost:8080/api`.
+
+## Full Stack Startup
+
+1. Start PostgreSQL and create the `pulseops` database if needed.
+2. Start the backend from `backend/` with `./mvnw spring-boot:run`.
+3. Start the frontend from `frontend/` with `npm run dev`.
+4. Open `http://localhost:5173`.

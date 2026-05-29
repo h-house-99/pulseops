@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -144,7 +145,7 @@ class MonitorApiIntegrationTest {
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
-		mockMvc.perform(get("/api/monitors/1/checks"))
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isArray())
 				.andExpect(jsonPath("$.length()").value(1))
@@ -158,7 +159,7 @@ class MonitorApiIntegrationTest {
 	}
 
 	@Test
-	void getMonitorChecksReturnsLengthTwoAfterTwoChecks() throws Exception {
+	void getMonitorChecksReturnsLengthFiveAfterSixChecks() throws Exception {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
@@ -170,20 +171,31 @@ class MonitorApiIntegrationTest {
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
-		mockMvc.perform(get("/api/monitors/1/checks"))
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isArray())
-				.andExpect(jsonPath("$.length()").value(2))
-				.andExpect(jsonPath("$[0].id").value(1))
+				.andExpect(jsonPath("$.length()").value(5))
+				.andExpect(jsonPath("$[0].id").value(6))
 				.andExpect(jsonPath("$[0].monitorId").value(1))
-				.andExpect(jsonPath("$[1].id").value(2))
+				.andExpect(jsonPath("$[1].id").value(5))
 				.andExpect(jsonPath("$[1].monitorId").value(1));
 	}
 
-
 	@Test
 	void getMonitorChecksReturnsNotFoundForUnknownMonitor() throws Exception {
-		mockMvc.perform(get("/api/monitors/1/checks"))
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
 				.andExpect(status().isNotFound());
 	}
 
@@ -220,7 +232,7 @@ class MonitorApiIntegrationTest {
 				.andExpect(jsonPath("$.checkedAt").exists())
 				.andExpect(jsonPath("$.errorMessage").value("Request timed out"));
 
-		mockMvc.perform(get("/api/monitors/1/checks"))
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(1))
 				.andExpect(jsonPath("$[0].id").value(1))
@@ -230,7 +242,34 @@ class MonitorApiIntegrationTest {
 				.andExpect(jsonPath("$[0].responseTimeMs").exists())
 				.andExpect(jsonPath("$[0].checkedAt").exists())
 				.andExpect(jsonPath("$[0].errorMessage").value("Request timed out"));
-				
+
+	}
+
+	@Test
+	void deleteMonitorRemovesMonitorAndCheckResults() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(delete("/api/monitors/1"))
+				.andExpect(status().isNoContent());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(0));
+
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void deleteMonitorReturnsNotFoundForUnknownMonitor() throws Exception {
+		mockMvc.perform(delete("/api/monitors/1"))
+				.andExpect(status().isNotFound());
 	}
 
 	@TestConfiguration

@@ -8,34 +8,6 @@ Base URL during local development:
 http://localhost:8080
 ```
 
-## Local Database
-
-The backend uses different databases depending on how it is run:
-
-- Local app runtime uses Postgres.
-- Automated tests use an in-memory H2 database.
-
-Local runtime reads the JDBC URL from `backend/src/main/resources/application.properties` with a default of `jdbc:postgresql://localhost:5432/pulseops`. **Username and password are never committed:** set `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` (optional URL override `SPRING_DATASOURCE_URL`). Copy `backend/.env.example` to `backend/.env`, fill in values, and load the file before starting the app (your shell or IDE should export those variables).
-
-Example environment (placeholders only):
-
-```bash
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pulseops
-export SPRING_DATASOURCE_USERNAME=your_postgres_username
-export SPRING_DATASOURCE_PASSWORD=your_postgres_password
-```
-
-Committed defaults in `application.properties` also include `spring.jpa.hibernate.ddl-auto=update`.
-
-Test config lives in `backend/src/test/resources/application.properties`:
-
-```properties
-spring.datasource.url=jdbc:h2:mem:pulseops_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-spring.jpa.hibernate.ddl-auto=create-drop
-```
-
-In local development, Postgres should be running on `localhost:5432` and the `pulseops` database should exist. Hibernate creates or updates the `monitors` and `check_results` tables when the backend starts.
-
 ## Status Rules
 
 Monitor checks use these rules:
@@ -232,10 +204,10 @@ If the monitor does not exist, the backend returns `404`.
 
 ## List Monitor Checks
 
-Returns check history for one monitor.
+Returns 5 recent checks for one monitor.
 
 ```http
-GET /api/monitors/{id}/checks
+GET /api/monitors/{id}/checks/recent
 ```
 
 Example response:
@@ -256,27 +228,14 @@ Example response:
 
 If the monitor does not exist, the backend returns `404`.
 
-## Investigate Monitor
+## Delete Monitor
 
-Uses recent check history to generate an AI incident summary.
-
-This endpoint is planned for a later version and is not implemented in v1 yet.
+Deletes a monitored endpoint and its stored check results.
 
 ```http
-POST /api/monitors/{id}/investigate
+DELETE /api/monitors/{id}
 ```
 
-Example response:
+Successful responses return `204 No Content`.
 
-```json
-{
-  "severity": "DEGRADED",
-  "summary": "The endpoint is reachable, but response time increased during the last several checks.",
-  "likelyCause": "The upstream API may be under load or rate limiting requests.",
-  "recommendedActions": [
-    "Check the provider status page.",
-    "Increase client timeout temporarily.",
-    "Continue monitoring for the next 10 minutes."
-  ]
-}
-```
+If the monitor does not exist, the backend returns `404`.
