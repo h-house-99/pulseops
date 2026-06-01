@@ -20,15 +20,24 @@ Monitor checks use these rules:
 
 ### Monitor
 
+All monitor-returning endpoints use this shape.
+
 ```json
 {
   "id": 1,
   "name": "GitHub API",
   "url": "https://api.github.com",
-  "status": "UNKNOWN",
-  "lastStatusCode": null,
-  "lastResponseTimeMs": null,
-  "lastCheckedAt": null
+  "status": "UP",
+  "lastStatusCode": 200,
+  "lastResponseTimeMs": 143,
+  "lastCheckedAt": "2026-05-17T18:30:00Z",
+  "totalChecks": 6,
+  "uptimePercentage": 83,
+  "averageResponseTimeMs": 184,
+  "fastestResponseTimeMs": 91,
+  "slowestResponseTimeMs": 721,
+  "latestErrorMessage": "Request timed out",
+  "lastFailureAt": "2026-05-17T18:32:00Z"
 }
 ```
 
@@ -37,8 +46,17 @@ Notes:
 - `status` starts as `UNKNOWN`.
 - `lastStatusCode`, `lastResponseTimeMs`, and `lastCheckedAt` are updated after `check-now`.
 - `lastStatusCode` can be `null` when the request fails before receiving an HTTP response.
+- Newly created monitors have `status: "UNKNOWN"` and no last check values yet.
+- `totalChecks` is the number of stored check results for the monitor. New Monitors have `totalChecks: 0`.
+- `uptimePercentage` is the percentage of stored checks with status `UP`. It is `null` when no checks exist.
+- `averageResponseTimeMs`, `fastestResponseTimeMs`, and `slowestResponseTimeMs` are calculated from stored check results.
+- Summary latency fields are `null` when no checks exist.
+- `latestErrorMessage` is the most recent non-null request error message, or `null`.
+- `lastFailureAt` is the most recent `DOWN` check time, or `null`.
 
 ### Check Result
+
+Check-running and check-history endpoints use this shape.
 
 ```json
 {
@@ -54,6 +72,7 @@ Notes:
 
 Notes:
 
+- `status` is `UP` for HTTP `200-399`; otherwise it is `DOWN`.
 - `statusCode` can be `null` for timeout, DNS, connection, SSL, or similar failures.
 - `errorMessage` is usually `null` when an HTTP response is received, even if the response is `500`.
 
@@ -112,19 +131,7 @@ Example request:
 }
 ```
 
-Example response:
-
-```json
-{
-  "id": 1,
-  "name": "GitHub API",
-  "url": "https://api.github.com",
-  "status": "UNKNOWN",
-  "lastStatusCode": null,
-  "lastResponseTimeMs": null,
-  "lastCheckedAt": null
-}
-```
+Returns a `Monitor` response.
 
 ## List Monitors
 
@@ -134,21 +141,7 @@ Returns all monitored API endpoints with their latest known check status.
 GET /api/monitors
 ```
 
-Example response:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "GitHub API",
-    "url": "https://api.github.com",
-    "status": "UP",
-    "lastStatusCode": 200,
-    "lastResponseTimeMs": 143,
-    "lastCheckedAt": "2026-05-17T18:30:00Z"
-  }
-]
-```
+Returns an array of `Monitor` responses.
 
 ## Check Monitor Now
 
@@ -158,7 +151,9 @@ Runs one manual health check for a monitored endpoint. This updates the monitor'
 POST /api/monitors/{id}/check-now
 ```
 
-Example `UP` response:
+Returns a `Check Result` response.
+
+Example `UP` result:
 
 ```json
 {
@@ -172,7 +167,7 @@ Example `UP` response:
 }
 ```
 
-Example `DOWN` response from an HTTP error:
+Example `DOWN` result from an HTTP error:
 
 ```json
 {
@@ -186,7 +181,7 @@ Example `DOWN` response from an HTTP error:
 }
 ```
 
-Example `DOWN` response from a request failure:
+Example `DOWN` result from a request failure:
 
 ```json
 {
@@ -210,21 +205,7 @@ Returns 5 recent checks for one monitor.
 GET /api/monitors/{id}/checks/recent
 ```
 
-Example response:
-
-```json
-[
-  {
-    "id": 10,
-    "monitorId": 1,
-    "status": "UP",
-    "statusCode": 200,
-    "responseTimeMs": 143,
-    "checkedAt": "2026-05-17T18:30:00Z",
-    "errorMessage": null
-  }
-]
-```
+Returns an array of `Check Result` responses.
 
 If the monitor does not exist, the backend returns `404`.
 

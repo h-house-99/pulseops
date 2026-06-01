@@ -1,5 +1,7 @@
 package com.pulseops;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -246,6 +248,102 @@ class MonitorApiIntegrationTest {
 	}
 
 	@Test
+	void getMonitorsReturnsEmptySummaryStatsForNewMonitor() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].totalChecks").value(0))
+				.andExpect(jsonPath("$[0].uptimePercentage").doesNotExist())
+				.andExpect(jsonPath("$[0].averageResponseTimeMs").isEmpty())
+				.andExpect(jsonPath("$[0].fastestResponseTimeMs").isEmpty())
+				.andExpect(jsonPath("$[0].slowestResponseTimeMs").isEmpty())
+				.andExpect(jsonPath("$[0].latestErrorMessage").isEmpty())
+				.andExpect(jsonPath("$[0].lastFailureAt").isEmpty());
+	}
+
+	@Test
+	void getMonitorsReturnsSummaryStatsAfterSuccessfulCheck() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());			
+				
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].totalChecks").value(1))
+				.andExpect(jsonPath("$[0].uptimePercentage").value(100))
+				.andExpect(jsonPath("$[0].averageResponseTimeMs").exists())
+				.andExpect(jsonPath("$[0].fastestResponseTimeMs").exists())
+				.andExpect(jsonPath("$[0].slowestResponseTimeMs").exists())
+				.andExpect(jsonPath("$[0].latestErrorMessage").isEmpty())
+				.andExpect(jsonPath("$[0].lastFailureAt").isEmpty());
+	}
+
+	@Test
+	void getMonitorsReturnsLatestErrorMessageAndLastFailureAtAfterTimeout() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/timeout\"}"))
+				.andExpect(status().isOk());				
+				
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].latestErrorMessage").value("Request timed out"))
+				.andExpect(jsonPath("$[0].lastFailureAt").exists());
+	}
+
+	@Test
+	void getMonitorsReturnsLastFailureAtWithoutLatestErrorMessageAfterHttpFailure() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/500\"}"))
+				.andExpect(status().isOk());				
+				
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].latestErrorMessage").isEmpty())
+				.andExpect(jsonPath("$[0].lastFailureAt").exists());
+	}
+
+	@Test
+	void getMonitorsReturnsCorrectUptimeAfterFlakyChecks() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/flaky\"}"))
+				.andExpect(status().isOk());			
+		
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].totalChecks").value(2))
+				.andExpect(jsonPath("$[0].lastFailureAt").exists())
+				.andExpect(jsonPath("$[0].uptimePercentage").value(50));
+	}
+
+	@Test
 	void deleteMonitorRemovesMonitorAndCheckResults() throws Exception {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -277,7 +375,15 @@ class MonitorApiIntegrationTest {
 		@Bean
 		@Primary
 		EndpointCheckClient endpointCheckClient() {
+			AtomicInteger checkCount = new AtomicInteger(0);
 			return url -> {
+				if (url.endsWith("/flaky")) {
+					int count = checkCount.incrementAndGet();
+					if (count == 1) {
+						return new EndpointCheckResult(200, null);
+					}
+					return new EndpointCheckResult(500, null);
+				}
 				if (url.endsWith("/status/500")) {
 					return new EndpointCheckResult(500, null);
 				}
