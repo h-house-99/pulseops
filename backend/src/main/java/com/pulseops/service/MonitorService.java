@@ -14,6 +14,7 @@ import com.pulseops.model.CheckResultResponse;
 import com.pulseops.model.CreateMonitorRequest;
 import com.pulseops.model.EndpointCheckResult;
 import com.pulseops.model.MonitorResponse;
+import com.pulseops.model.MonitorSummaryStats;
 import com.pulseops.repository.CheckResultRepository;
 import com.pulseops.repository.MonitorRepository;
 
@@ -79,7 +80,24 @@ public class MonitorService {
     }
 
     private MonitorResponse toResponse(Monitor monitor) {
-        return new MonitorResponse(monitor.getId(), monitor.getName(), monitor.getUrl(), monitor.getStatus(), monitor.getLastStatusCode(), monitor.getLastResponseTimeMs(), monitor.getLastCheckedAt());
+        MonitorSummaryStats summaryStats = checkResultRepository.getSummaryStatsByMonitor(monitor);
+
+        Long uptimePercentage = null;
+        if (summaryStats.totalChecks() > 0) {
+            uptimePercentage = Math.round(((double) summaryStats.uptimeCount() * 100) / summaryStats.totalChecks());
+        }
+        Long averageResponseTimeMs = summaryStats.averageResponseTimeMs() != null ? Math.round(summaryStats.averageResponseTimeMs()) : null;
+
+        String lastErrorMessage = checkResultRepository.findTopByMonitorAndErrorMessageIsNotNullOrderByCheckedAtDesc(monitor)
+                .map(CheckResult::getErrorMessage)
+                .orElse(null);
+
+        Instant lastFailureAt = checkResultRepository.findTopByMonitorAndStatusOrderByCheckedAtDesc(monitor, "DOWN")
+                .map(CheckResult::getCheckedAt)
+                .orElse(null);
+
+
+        return new MonitorResponse(monitor.getId(), monitor.getName(), monitor.getUrl(), monitor.getStatus(), monitor.getLastStatusCode(), monitor.getLastResponseTimeMs(), monitor.getLastCheckedAt(), summaryStats.totalChecks(), uptimePercentage, averageResponseTimeMs, summaryStats.fastestResponseTimeMs(), summaryStats.slowestResponseTimeMs(), lastErrorMessage, lastFailureAt);
     }
 
     private CheckResultResponse toCheckResultResponse(CheckResult checkResult, long monitorId) {
