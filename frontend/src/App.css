@@ -100,6 +100,34 @@
   color: #7a8293;
 }
 
+.monitor-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  color: #9d9fa1;
+  font-size: 13px;
+}
+
+.monitor-summary span {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #212223;
+  border: 1px solid #3c3d3d;
+}
+
+.monitor-card .monitor-summary-last-failure {
+  margin-top: 10px;
+  color: #9d9fa1;
+  font-size: 11px;
+}
+
+.monitor-card .monitor-summary-latest-error {
+  margin-top: 8px;
+  color: #fca5a5;
+  font-size: 12px;
+}
+
 .error-message {
   color: #fca5a5;
   margin: 0 0 16px;
