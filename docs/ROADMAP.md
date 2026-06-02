@@ -2,7 +2,7 @@
 
 This document separates what PulseOps supports today from planned future work.
 
-## Version 1
+## Version 1 - Complete
 
 Users can:
 
@@ -10,6 +10,9 @@ Users can:
 - manually run a health check
 - see whether the endpoint is up or down
 - see status code, response time, and last checked time
+- see total checks and uptime percentage
+- see average, fastest, and slowest response times
+- see the latest request error and last failure time
 - view recent check history for an endpoint
 - delete a monitor and its check history
 
@@ -32,10 +35,12 @@ The first version does not include:
 Possible next features:
 
 - scheduled checks
-- uptime percentage
+- richer uptime and error-rate analytics
 - error rate
 - basic incident records
+- alerts or notifications
 - frontend discovery flow for curated public APIs
+- deployment
 
 ## Later Ideas
 
@@ -44,6 +49,5 @@ Possible next features:
 - provider status page lookup
 - top monitored APIs
 - API search tracking
-- deployment to the internet
 - Go backend implementation
 - Python FastAPI backend implementation
