@@ -11,9 +11,9 @@ React + Vite frontend
     -> External API endpoints
 ```
 
-The frontend manages the monitor dashboard, user input, loading states, and recent check history display.
+The frontend manages the monitor dashboard, user input, loading states, monitor summary statistics, error details, and recent check history display.
 
-The backend owns monitor validation, persistence, endpoint health checks, and API response shaping.
+The backend owns monitor validation, persistence, endpoint health checks, summary-stat calculation, and API response shaping.
 
 PostgreSQL stores monitored endpoints and historical check results. Tests use H2 so backend integration tests can run without a local Postgres instance.
 
@@ -24,7 +24,8 @@ PostgreSQL stores monitored endpoints and historical check results. Tests use H2
 3. Spring Boot validates and stores the monitor with status `UNKNOWN`.
 4. A user clicks check now.
 5. The backend calls the monitor URL, records status code, latency, checked time, and any request error.
-6. The frontend refreshes the monitor list and can load recent check history.
+6. The backend recalculates monitor summary fields from stored check results.
+7. The frontend refreshes the monitor list and displays status, uptime percentage, latency summaries, latest error details, and recent check history.
 
 ## Data Model
 
@@ -42,6 +43,16 @@ Fields:
 - `last_response_time_ms`
 - `last_checked_at`
 - `created_at`
+
+Computed response fields:
+
+- `totalChecks`
+- `uptimePercentage`
+- `averageResponseTimeMs`
+- `fastestResponseTimeMs`
+- `slowestResponseTimeMs`
+- `latestErrorMessage`
+- `lastFailureAt`
 
 Status values currently used:
 
@@ -89,4 +100,4 @@ PublicApi can be copied into a Monitor later
 
 ## Planned Extensions
 
-Future versions may add scheduled checks, uptime calculations, incident records, AI-generated summaries, and alternate backend implementations in Go or Python.
+Future versions may add scheduled checks, richer error-rate analytics, incident records, alerts, AI-generated summaries, and alternate backend implementations in Go or Python.

@@ -70,6 +70,26 @@ function MonitorCard({
         </div>
       </div>
 
+      <div className="monitor-summary">
+          <span>Uptime {monitor.uptimePercentage === null ? '-' : `${monitor.uptimePercentage}%`}</span>
+          <span>Checks {monitor.totalChecks}</span>
+          <span>Avg {monitor.averageResponseTimeMs === null ? '-' : `${monitor.averageResponseTimeMs}ms`}</span>
+          <span>Fast {monitor.fastestResponseTimeMs === null ? '-' : `${monitor.fastestResponseTimeMs}ms`}</span>
+          <span>Slow {monitor.slowestResponseTimeMs === null ? '-' : `${monitor.slowestResponseTimeMs}ms`}</span>
+      </div>
+
+      {monitor.lastFailureAt && (
+        <p className="monitor-summary-last-failure">
+          Last failure {formatCheckedAt(monitor.lastFailureAt)}
+        </p>
+      )}
+
+      {monitor.latestErrorMessage && (
+        <p className="monitor-summary-latest-error">
+          {monitor.latestErrorMessage}
+        </p>
+      )}
+
       {isExpanded && (
         <div className="check-history">
           <h4>Recent checks</h4>
