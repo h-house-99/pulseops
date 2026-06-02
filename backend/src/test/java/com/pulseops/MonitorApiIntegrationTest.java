@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.pulseops.model.EndpointCheckResult;
 import com.pulseops.service.EndpointCheckClient;
+import com.pulseops.service.MonitorService;
 
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -29,12 +30,65 @@ class MonitorApiIntegrationTest {
 	@Autowired
 	private MockMvc mockMvc;
 
+	@Autowired
+	private MonitorService monitorService;
+
 	@Test
 	void getMonitorsInitiallyReturnsEmptyArray() throws Exception {
 		mockMvc.perform(get("/api/monitors"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isArray())
 				.andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void getMonitorsReturnsMonitors() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs\",\"url\":\"https://example.com/status\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].id").value(1))
+				.andExpect(jsonPath("$[0].name").value("API Docs"))
+				.andExpect(jsonPath("$[0].url").value("https://example.com/status"));
+	}
+
+	@Test
+	void checkAllMonitorsChecksAllMonitors() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs\",\"url\":\"https://example.com/status\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"API Docs 2\",\"url\":\"https://example.com/status/500\"}"))
+			.andExpect(status().isOk());
+
+		monitorService.checkAllMonitors();
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].name").value("API Docs"))
+				.andExpect(jsonPath("$[0].status").value("UP"))
+				.andExpect(jsonPath("$[0].lastStatusCode").value(200))
+				.andExpect(jsonPath("$[1].name").value("API Docs 2"))
+				.andExpect(jsonPath("$[1].status").value("DOWN"))
+				.andExpect(jsonPath("$[1].lastStatusCode").value(500));
+
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].status").value("UP"))
+				.andExpect(jsonPath("$[0].statusCode").value(200));
+
+		mockMvc.perform(get("/api/monitors/2/checks/recent"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].status").value("DOWN"))
+				.andExpect(jsonPath("$[0].statusCode").value(500));
 	}
 
 	@Test

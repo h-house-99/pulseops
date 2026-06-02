@@ -48,19 +48,15 @@ public class MonitorService {
         Monitor monitor = monitorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
 
-        Instant startedAt = Instant.now();
-        EndpointCheckResult endpointCheckResult = endpointCheckClient.checkEndpoint(monitor.getUrl());
-        Instant checkedAt = Instant.now();
-        Integer statusCode = endpointCheckResult.statusCode();
-        String errorMessage = endpointCheckResult.errorMessage();
-        Long responseTimeMs = Duration.between(startedAt, checkedAt).toMillis();
-        String status = statusCode != null && statusCode >= 200 && statusCode < 400 ? "UP" : "DOWN";
-
-        monitor.updateAfterCheck(status, statusCode, responseTimeMs, checkedAt);
-        monitorRepository.save(monitor);
-        CheckResult checkResult = new CheckResult(monitor, status, statusCode, responseTimeMs, checkedAt, errorMessage);
-        checkResultRepository.save(checkResult);
+        CheckResult checkResult = checkAndSaveResult(monitor);
         return toCheckResultResponse(checkResult, monitor.getId());
+    }
+
+    public void checkAllMonitors() {
+        List<Monitor> monitors = monitorRepository.findAllByOrderByIdAsc();
+        for (Monitor monitor : monitors) {
+            checkAndSaveResult(monitor);
+        }
     }
 
     public List<CheckResultResponse> getChecksForMonitor(long monitorId) {
@@ -102,5 +98,21 @@ public class MonitorService {
 
     private CheckResultResponse toCheckResultResponse(CheckResult checkResult, long monitorId) {
         return new CheckResultResponse(checkResult.getId(), monitorId, checkResult.getStatus(), checkResult.getStatusCode(), checkResult.getResponseTimeMs(), checkResult.getCheckedAt(), checkResult.getErrorMessage());
+    }
+
+    private CheckResult checkAndSaveResult(Monitor monitor) {
+        Instant startedAt = Instant.now();
+        EndpointCheckResult endpointCheckResult = endpointCheckClient.checkEndpoint(monitor.getUrl());
+        Instant checkedAt = Instant.now();
+        Integer statusCode = endpointCheckResult.statusCode();
+        String errorMessage = endpointCheckResult.errorMessage();
+        Long responseTimeMs = Duration.between(startedAt, checkedAt).toMillis();
+        String status = statusCode != null && statusCode >= 200 && statusCode < 400 ? "UP" : "DOWN";
+
+        monitor.updateAfterCheck(status, statusCode, responseTimeMs, checkedAt);
+        monitorRepository.save(monitor);
+        CheckResult checkResult = new CheckResult(monitor, status, statusCode, responseTimeMs, checkedAt, errorMessage);
+        checkResultRepository.save(checkResult);
+        return checkResult;
     }
 }
