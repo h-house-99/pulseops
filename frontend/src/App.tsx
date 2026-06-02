@@ -1,10 +1,11 @@
 import './App.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import MonitorForm from './components/MonitorForm'
 import MonitorCard from './components/MonitorCard'
 import type { Monitor, CheckResult } from './types'
 
 const BASE_URL = 'http://localhost:8080/api'
+const MONITOR_REFRESH_INTERVAL_MS = 60_000
 
 function App() {
   const [monitors, setMonitors] = useState<Monitor[]>([])
@@ -17,8 +18,9 @@ function App() {
   const [loadingHistoryMonitorIds, setLoadingHistoryMonitorIds] = useState<number[]>([])
   const [historyErrorByMonitorId, setHistoryErrorByMonitorId] = useState<Record<number, string | null>>({})
   const [checkingMonitorIds, setCheckingMonitorIds] = useState<number[]>([])
+  const expandedMonitorIdsRef = useRef<number[]>([])
 
-  async function fetchMonitors() {
+  const fetchMonitors = useCallback(async () => {
     const response = await fetch(`${BASE_URL}/monitors`)
 
     if (!response.ok) {
@@ -28,16 +30,47 @@ function App() {
     const data: Monitor[] = await response.json()
 
     return data
-  }
+  }, [])
 
-  async function fetchRecentChecks(monitorId: number) {
+  const fetchRecentChecks = useCallback(async (monitorId: number) => {
     const response = await fetch(`${BASE_URL}/monitors/${monitorId}/checks/recent`)
     if (!response.ok) {
       throw new Error('Could not load check results.')
     }
     const data: CheckResult[] = await response.json()
     return data
-  }
+  }, [])
+
+  const refreshExpandedCheckHistory = useCallback(async (monitorIds: number[]) => {
+    if (monitorIds.length === 0) {
+      return
+    }
+
+    const nextChecksByMonitorId: Record<number, CheckResult[]> = {}
+
+    for (const monitorId of monitorIds) {
+      try {
+        const checks = await fetchRecentChecks(monitorId)
+        nextChecksByMonitorId[monitorId] = checks
+        setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: null }))
+      } catch (error) {
+        setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+      }
+    }
+
+    setChecksByMonitorId((currentChecks) => ({ ...currentChecks, ...nextChecksByMonitorId }))
+  }, [fetchRecentChecks])
+
+  const refreshMonitorDashboard = useCallback(async () => {
+    try {
+      const data = await fetchMonitors()
+      setMonitors(data)
+      setErrorMessage(null)
+      await refreshExpandedCheckHistory(expandedMonitorIdsRef.current)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
+    }
+  }, [fetchMonitors, refreshExpandedCheckHistory])
 
   async function handleCheckNow(monitorId: number) {
     try {
@@ -156,21 +189,23 @@ function App() {
     }
   }
 
-
   useEffect(() => {
     async function loadInitialMonitors() {
       try {
-        const data = await fetchMonitors()
-        setMonitors(data)
-        setErrorMessage(null)
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
+        await refreshMonitorDashboard()
       } finally {
         setIsLoading(false)
       }
     }
     loadInitialMonitors()
-  }, [])
+
+    const intervalId = window.setInterval(() => refreshMonitorDashboard(), MONITOR_REFRESH_INTERVAL_MS)
+    return () => window.clearInterval(intervalId)
+  }, [refreshMonitorDashboard])
+
+  useEffect(() => {
+    expandedMonitorIdsRef.current = expandedMonitorIds
+  }, [expandedMonitorIds])
 
   return (
     <main className="app-shell">

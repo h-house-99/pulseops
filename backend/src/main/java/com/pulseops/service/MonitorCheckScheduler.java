@@ -1,5 +1,7 @@
 package com.pulseops.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Component;
 public class MonitorCheckScheduler {
 
     private final MonitorService monitorService;
+    private static final Logger logger = LoggerFactory.getLogger(MonitorCheckScheduler.class);
 
     public MonitorCheckScheduler(MonitorService monitorService) {
         this.monitorService = monitorService;
@@ -14,6 +17,8 @@ public class MonitorCheckScheduler {
     
     @Scheduled(cron = "0 0/5 * * * *")
     public void checkAllMonitors() {
+        logger.info("Scheduled monitor checks starting");
         monitorService.checkAllMonitors();
+        logger.info("Scheduled monitor checks completed");
     }
 }

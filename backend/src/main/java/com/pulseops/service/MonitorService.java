@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +26,7 @@ public class MonitorService {
     private final EndpointCheckClient endpointCheckClient;
     private final MonitorRepository monitorRepository;
     private final CheckResultRepository checkResultRepository;
+    private static final Logger logger = LoggerFactory.getLogger(MonitorService.class);
 
     public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository) {
         this.endpointCheckClient = endpointCheckClient;
@@ -55,7 +58,11 @@ public class MonitorService {
     public void checkAllMonitors() {
         List<Monitor> monitors = monitorRepository.findAllByOrderByIdAsc();
         for (Monitor monitor : monitors) {
-            checkAndSaveResult(monitor);
+            try {
+                checkAndSaveResult(monitor);
+            } catch (Exception e) {
+                logger.warn("Scheduled check failed for monitor {}", monitor.getId(), e);
+            }
         }
     }
 
