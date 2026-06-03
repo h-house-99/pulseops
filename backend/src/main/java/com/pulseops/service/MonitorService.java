@@ -76,6 +76,20 @@ public class MonitorService {
                 .toList();
     }
 
+    public List<CheckResultResponse> getChecksForMonitor(long monitorId, int hours) {
+        if (hours != 1 && hours != 8 && hours != 24) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported hours value");
+        }
+
+        Monitor monitor = monitorRepository.findById(monitorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
+
+        return checkResultRepository.findByMonitorAndCheckedAtGreaterThanEqualOrderByCheckedAtAsc(monitor, Instant.now().minus(Duration.ofHours(hours)))
+                .stream()
+                .map(checkResult -> toCheckResultResponse(checkResult, monitorId))
+                .toList();
+    }
+
     public void deleteMonitor(long monitorId) {
         Monitor monitor = monitorRepository.findById(monitorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));

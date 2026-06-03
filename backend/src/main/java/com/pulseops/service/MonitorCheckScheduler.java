@@ -15,7 +15,7 @@ public class MonitorCheckScheduler {
         this.monitorService = monitorService;
     }
     
-    @Scheduled(cron = "0 0/5 * * * *")
+    @Scheduled(cron = "${pulseops.monitor-check-cron:0 0/5 * * * *}")
     public void checkAllMonitors() {
         logger.info("Scheduled monitor checks starting");
         monitorService.checkAllMonitors();

@@ -2,9 +2,9 @@
 
 PulseOps is a full-stack API monitoring dashboard built with a React frontend, a Spring Boot REST API, and PostgreSQL.
 
-Version 1 is complete. It supports adding API monitors, running manual health checks, storing recent check history, deleting monitors, and viewing status, latency, uptime percentage, response-time summaries, latest errors, and last failure time from the frontend.
+PulseOps currently supports adding API monitors, running manual and scheduled health checks, storing recent check history, deleting monitors, and viewing status, latency, uptime percentage, response-time summaries, latest errors, and last failure time from the frontend.
 
-Version 2 will focus on scheduled checks, richer uptime analytics, incident records, alerts, and AI-assisted incident summaries.
+The roadmap tracks upcoming work such as chart-ready history, richer uptime analytics, incident records, alerts, and AI-assisted incident summaries.
 
 ## Screenshots
 
@@ -53,12 +53,13 @@ pulseops/
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 
-## Version 1 Complete
+## Current Features
 
 Users can:
 
 - add an API endpoint to the monitor list
 - manually run a health check
+- receive scheduled background checks every 5 minutes
 - see status code, response time, and last checked time
 - see uptime percentage and total checks
 - see average, fastest, and slowest response times
@@ -68,13 +69,6 @@ Users can:
 
 The backend also exposes a curated public APIs endpoint that can be connected to the frontend discovery flow later.
 
-## Version 2 Ideas
+## What Is Next
 
-- scheduled background checks
-- richer uptime and error-rate analytics
-- incident records
-- alerts or notifications
-- frontend discovery flow for curated public APIs
-- AI-assisted incident summaries
-- deployment
-- alternate Go or Python backend implementations
+See the [Roadmap](docs/ROADMAP.md) for planned work and feature priorities. The next likely product step is a chart-ready check history API followed by frontend latency and status charts.
