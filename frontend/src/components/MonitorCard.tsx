@@ -1,4 +1,5 @@
 import type { CheckResult, Monitor } from '../types'
+import MonitorLatencyChart from './MonitorLatencyChart'
 
 type MonitorCardProps = {
   monitor: Monitor
@@ -8,6 +9,9 @@ type MonitorCardProps = {
   isHistoryLoading: boolean
   isChecking: boolean
   historyErrorMessage: string | null
+  chartChecks: CheckResult[]
+  isChartLoading: boolean
+  chartErrorMessage: string | null
   onToggleCheckHistory: () => void
   onDeleteMonitor: () => void
 }
@@ -29,6 +33,9 @@ function MonitorCard({
   isHistoryLoading,
   isChecking,
   historyErrorMessage,
+  chartChecks,
+  isChartLoading,
+  chartErrorMessage,
   onToggleCheckHistory,
   onDeleteMonitor,
 }: MonitorCardProps) {
@@ -71,11 +78,11 @@ function MonitorCard({
       </div>
 
       <div className="monitor-summary">
-          <span>Uptime {monitor.uptimePercentage === null ? '-' : `${monitor.uptimePercentage}%`}</span>
-          <span>Checks {monitor.totalChecks}</span>
-          <span>Avg {monitor.averageResponseTimeMs === null ? '-' : `${monitor.averageResponseTimeMs}ms`}</span>
-          <span>Fast {monitor.fastestResponseTimeMs === null ? '-' : `${monitor.fastestResponseTimeMs}ms`}</span>
-          <span>Slow {monitor.slowestResponseTimeMs === null ? '-' : `${monitor.slowestResponseTimeMs}ms`}</span>
+        <span>Uptime {monitor.uptimePercentage === null ? '-' : `${monitor.uptimePercentage}%`}</span>
+        <span>Checks {monitor.totalChecks}</span>
+        <span>Avg {monitor.averageResponseTimeMs === null ? '-' : `${monitor.averageResponseTimeMs}ms`}</span>
+        <span>Fast {monitor.fastestResponseTimeMs === null ? '-' : `${monitor.fastestResponseTimeMs}ms`}</span>
+        <span>Slow {monitor.slowestResponseTimeMs === null ? '-' : `${monitor.slowestResponseTimeMs}ms`}</span>
       </div>
 
       {monitor.lastFailureAt && (
@@ -91,38 +98,46 @@ function MonitorCard({
       )}
 
       {isExpanded && (
-        <div className="check-history">
-          <h4>Recent checks</h4>
-          <div className="check-history-header">
-            <span>Status</span>
-            <span>Code</span>
-            <span>Latency</span>
-            <span>Checked</span>
+        <>
+
+          {isChartLoading && <p>Loading chart...</p>}
+          {chartErrorMessage && <p className="error-message">{chartErrorMessage}</p>}
+
+          <MonitorLatencyChart checks={chartChecks} />
+
+          <div className="check-history">
+            <h4>Recent checks</h4>
+            <div className="check-history-header">
+              <span>Status</span>
+              <span>Code</span>
+              <span>Latency</span>
+              <span>Checked</span>
+            </div>
+
+            {isHistoryLoading && <p>Loading checks...</p>}
+
+            {historyErrorMessage && <p className="error-message">{historyErrorMessage}</p>}
+
+            {!isHistoryLoading && !historyErrorMessage && checks.length === 0 && (
+              <p>No checks recorded yet.</p>
+            )}
+
+            {!isHistoryLoading && !historyErrorMessage && checks.length > 0 && (
+              <ul>
+                {checks.map((check) => (
+                  <li key={check.id}>
+                    <span className={`status-pill status-${check.status.toLowerCase()}`}>
+                      {check.status}
+                    </span>
+                    <span>{check.statusCode ?? '-'}</span>
+                    <span>{check.responseTimeMs === null ? '-' : `${check.responseTimeMs}ms`}</span>
+                    <span>{formatCheckedAt(check.checkedAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-
-          {isHistoryLoading && <p>Loading checks...</p>}
-
-          {historyErrorMessage && <p className="error-message">{historyErrorMessage}</p>}
-
-          {!isHistoryLoading && !historyErrorMessage && checks.length === 0 && (
-            <p>No checks recorded yet.</p>
-          )}
-
-          {!isHistoryLoading && !historyErrorMessage && checks.length > 0 && (
-            <ul>
-              {checks.map((check) => (
-                <li key={check.id}>
-                  <span className={`status-pill status-${check.status.toLowerCase()}`}>
-                    {check.status}
-                  </span>
-                  <span>{check.statusCode ?? '-'}</span>
-                  <span>{check.responseTimeMs === null ? '-' : `${check.responseTimeMs}ms`}</span>
-                  <span>{formatCheckedAt(check.checkedAt)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        </>
       )}
     </div>
   )

@@ -133,6 +133,25 @@
   margin: 0 0 16px;
 }
 
+.monitor-latency-chart {
+  margin-top: 16px;
+}
+
+.monitor-latency-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.monitor-latency-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: #7a8293;
+  font-size: 12px;
+}
+
 .monitor-meta {
   display: flex;
   align-items: center;

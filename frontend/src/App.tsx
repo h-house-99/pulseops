@@ -19,6 +19,9 @@ function App() {
   const [historyErrorByMonitorId, setHistoryErrorByMonitorId] = useState<Record<number, string | null>>({})
   const [checkingMonitorIds, setCheckingMonitorIds] = useState<number[]>([])
   const expandedMonitorIdsRef = useRef<number[]>([])
+  const [chartChecksByMonitorId, setChartChecksByMonitorId] = useState<Record<number, CheckResult[]>>({})
+  const [loadingChartMonitorIds, setLoadingChartMonitorIds] = useState<number[]>([])
+  const [chartErrorByMonitorId, setChartErrorByMonitorId] = useState<Record<number, string | null>>({})
 
   const fetchMonitors = useCallback(async () => {
     const response = await fetch(`${BASE_URL}/monitors`)
@@ -41,14 +44,31 @@ function App() {
     return data
   }, [])
 
+  const fetchChartChecks = useCallback(async (monitorId: number) => {
+    const response = await fetch(`${BASE_URL}/monitors/${monitorId}/checks?hours=24`)
+    if (!response.ok) {
+      throw new Error('Could not load check results.')
+    }
+    const data: CheckResult[] = await response.json()
+    return data
+  }, [])
+
   const refreshExpandedCheckHistory = useCallback(async (monitorIds: number[]) => {
     if (monitorIds.length === 0) {
       return
     }
 
     const nextChecksByMonitorId: Record<number, CheckResult[]> = {}
+    const nextChartChecksByMonitorId: Record<number, CheckResult[]> = {}
 
     for (const monitorId of monitorIds) {
+      try {
+        const checks = await fetchChartChecks(monitorId)
+        nextChartChecksByMonitorId[monitorId] = checks
+        setChartErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: null }))
+      } catch (error) {
+        setChartErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+      }
       try {
         const checks = await fetchRecentChecks(monitorId)
         nextChecksByMonitorId[monitorId] = checks
@@ -59,7 +79,8 @@ function App() {
     }
 
     setChecksByMonitorId((currentChecks) => ({ ...currentChecks, ...nextChecksByMonitorId }))
-  }, [fetchRecentChecks])
+    setChartChecksByMonitorId((currentChecks) => ({ ...currentChecks, ...nextChartChecksByMonitorId }))
+  }, [fetchRecentChecks, fetchChartChecks])
 
   const refreshMonitorDashboard = useCallback(async () => {
     try {
@@ -87,10 +108,28 @@ function App() {
       const data = await fetchMonitors()
       setMonitors(data)
       if (expandedMonitorIds.includes(monitorId)) {
-        const checkData = await fetchRecentChecks(monitorId)
-        setChecksByMonitorId((currentChecks) => ({ ...currentChecks, [monitorId]: checkData }))
+        try {
+          const checkData = await fetchRecentChecks(monitorId)
+          setChecksByMonitorId((currentChecks) => ({ ...currentChecks, [monitorId]: checkData }))
+          setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: null }))
+        } catch (error) {
+          setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+        }
+      
+        try {
+          const chartData = await fetchChartChecks(monitorId)
+          setChartChecksByMonitorId((currentChecks) => ({ ...currentChecks, [monitorId]: chartData }))
+          setChartErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: null }))
+        } catch (error) {
+          setChartErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+        }
       } else {
         setChecksByMonitorId((currentChecks) => {
+          const nextChecks = { ...currentChecks }
+          delete nextChecks[monitorId]
+          return nextChecks
+        })
+        setChartChecksByMonitorId((currentChecks) => {
           const nextChecks = { ...currentChecks }
           delete nextChecks[monitorId]
           return nextChecks
@@ -138,17 +177,33 @@ function App() {
 
     setExpandedMonitorIds((currentIds) => [...currentIds, monitorId])
 
-    if (checksByMonitorId[monitorId]) {
+    const hasRecentChecks = checksByMonitorId[monitorId]
+    const hasChartChecks = chartChecksByMonitorId[monitorId]
+
+    if (hasRecentChecks && hasChartChecks) {
       return
     }
 
     try {
-      setLoadingHistoryMonitorIds((currentIds) => [...currentIds, monitorId])
-      setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
+      if (!hasChartChecks) {
+        setLoadingChartMonitorIds((currentIds) => [...currentIds, monitorId])
+        setChartErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
+        const chartData = await fetchChartChecks(monitorId)
+        setChartChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: chartData }))
+      }
+    } catch (error) {
+      setChartErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
+    } finally {
+      setLoadingChartMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
+    }
 
-      const data: CheckResult[] = await fetchRecentChecks(monitorId)
-
-      setChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: data }))
+    try {
+      if (!hasRecentChecks) {
+        setLoadingHistoryMonitorIds((currentIds) => [...currentIds, monitorId])
+        setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
+        const data: CheckResult[] = await fetchRecentChecks(monitorId)
+        setChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: data }))
+      }
     } catch (error) {
       setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
     } finally {
@@ -243,6 +298,9 @@ function App() {
             isHistoryLoading={loadingHistoryMonitorIds.includes(monitor.id)}
             isChecking={checkingMonitorIds.includes(monitor.id)}
             historyErrorMessage={historyErrorByMonitorId[monitor.id] ?? null}
+            chartChecks={chartChecksByMonitorId[monitor.id] ?? []}
+            isChartLoading={loadingChartMonitorIds.includes(monitor.id)}
+            chartErrorMessage={chartErrorByMonitorId[monitor.id] ?? null}
             onToggleCheckHistory={() => handleToggleCheckHistory(monitor.id)}
             onDeleteMonitor={() => handleDeleteMonitor(monitor.id)}
           />
