@@ -133,6 +133,32 @@
   margin: 0 0 16px;
 }
 
+.monitor-chart-window-control {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 4px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  background: #212223;
+}
+
+.monitor-chart-window-control button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #9d9fa1;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.monitor-chart-window-control button.active {
+  color: #ffffff;
+  background: #3673f8;
+}
+
 .monitor-latency-chart {
   margin-top: 16px;
 }

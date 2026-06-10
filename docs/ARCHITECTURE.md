@@ -11,7 +11,7 @@ React + Vite frontend
     -> External API endpoints
 ```
 
-The frontend manages the monitor dashboard, user input, loading states, monitor summary statistics, error details, recent check history display, and periodic dashboard refreshes.
+The frontend manages the monitor dashboard, user input, loading states, monitor summary statistics, error details, recent check history display, latency charts, and periodic dashboard refreshes.
 
 The backend owns monitor validation, persistence, endpoint health checks, scheduled background checks, summary-stat calculation, and API response shaping.
 
@@ -25,7 +25,7 @@ PostgreSQL stores monitored endpoints and historical check results. Tests use H2
 4. A user clicks check now.
 5. The backend calls the monitor URL, records status code, latency, checked time, and any request error.
 6. The backend recalculates monitor summary fields from stored check results.
-7. The frontend refreshes the monitor list and displays status, uptime percentage, latency summaries, latest error details, and recent check history.
+7. The frontend refreshes the monitor list and displays status, uptime percentage, latency summaries, latest error details, recent check history, and latency chart data.
 
 ## Scheduled Check Flow
 
@@ -108,4 +108,4 @@ PublicApi can be copied into a Monitor later
 
 ## Planned Extensions
 
-Future versions may add chart-ready check history, richer error-rate analytics, incident records, alerts, AI-generated summaries, and alternate backend implementations in Go or Python.
+Future versions may add richer error-rate analytics, incident records, alerts, AI-generated summaries, and alternate backend implementations in Go or Python.

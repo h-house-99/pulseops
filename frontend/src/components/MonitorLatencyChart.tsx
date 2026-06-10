@@ -2,10 +2,12 @@ import type { CheckResult } from '../types'
 
 type MonitorLatencyChartProps = {
     checks: CheckResult[]
+    timeWindowHours: number
+    chartFetchedAt: number
 }
 
 
-function MonitorLatencyChart({ checks }: MonitorLatencyChartProps) {
+function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt }: MonitorLatencyChartProps) {
     if (checks.length === 0) {
         return <p>No chart data yet.</p>
     }
@@ -23,8 +25,7 @@ function MonitorLatencyChart({ checks }: MonitorLatencyChartProps) {
     const percentile95Index = Math.floor((sortedResponseTimes.length - 1) * 0.95)
     const visual95thPercentileResponseTime = Math.max(sortedResponseTimes[percentile95Index] ?? 1, 1)
 
-    const timeWindowHours = 24
-    const endTime = new Date(checks[checks.length - 1].checkedAt).getTime()
+    const endTime = chartFetchedAt
     const startTime = endTime - timeWindowHours * 60 * 60 * 1000
     const timeWindowMs = endTime - startTime
 
@@ -37,7 +38,9 @@ function MonitorLatencyChart({ checks }: MonitorLatencyChartProps) {
         return { x, y, status: check.status }
     })
 
-    const linePoints = points.map((point) => `${point.x},${point.y}`).join(' ')
+    const linePoints = points.length > 0
+        ? `${padding},${points[0].y} ${points.map((point) => `${point.x},${point.y}`).join(' ')}`
+        : ''
 
     return (
         <div className="monitor-latency-chart">
@@ -70,8 +73,8 @@ function MonitorLatencyChart({ checks }: MonitorLatencyChartProps) {
                 ))}
             </svg>
             <div className="monitor-latency-chart-axis">
-                <span>24 hours ago</span>
-                <span>Latest check</span>
+                <span>{timeWindowHours} hour(s) ago</span>
+                <span>Now</span>
             </div>
         </div>
     )

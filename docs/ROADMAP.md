@@ -15,6 +15,7 @@ PulseOps currently supports:
 - see average, fastest, and slowest response times
 - see the latest request error and last failure time
 - view recent check history for an endpoint
+- view latency charts for the last 1, 8, or 24 hours
 - delete a monitor and its check history
 
 The backend also includes a curated public API list endpoint. A frontend discovery flow can be added later.
@@ -24,7 +25,6 @@ The backend also includes a curated public API list endpoint. A frontend discove
 PulseOps does not include these yet:
 
 - login or user accounts
-- chart-ready history beyond the 5 most recent checks
 - alerts or notifications
 - public user submissions
 - real top-searched API rankings
@@ -33,18 +33,15 @@ PulseOps does not include these yet:
 
 ## Recommended Next
 
-1. Add a chart-ready check history endpoint.
-2. Add frontend latency and status charts for each monitor.
-3. Add richer uptime and error-rate analytics.
-
-The history endpoint should come before charts because the current frontend only fetches the 5 most recent checks. A useful first API shape would be `GET /api/monitors/{id}/checks?limit=50`, with a later `from` and `to` time range if needed.
+1. Improve chart UX with point details for exact latency, status, and checked time.
+2. Add richer uptime and error-rate analytics.
+3. Add basic incident records for downtime periods.
 
 ## Next Features
 
 - configurable scheduled check interval
-- chart-ready check history
-- latency trend charts
 - uptime/status timeline charts
+- chart point details or tooltips
 - error rate summaries
 - basic incident records
 - alerts or notifications

@@ -12,6 +12,9 @@ type MonitorCardProps = {
   chartChecks: CheckResult[]
   isChartLoading: boolean
   chartErrorMessage: string | null
+  chartWindowHours: number
+  onChartWindowHoursChange: (hours: number) => void
+  chartFetchedAt: number
   onToggleCheckHistory: () => void
   onDeleteMonitor: () => void
 }
@@ -36,6 +39,9 @@ function MonitorCard({
   chartChecks,
   isChartLoading,
   chartErrorMessage,
+  chartWindowHours,
+  onChartWindowHoursChange,
+  chartFetchedAt,
   onToggleCheckHistory,
   onDeleteMonitor,
 }: MonitorCardProps) {
@@ -103,7 +109,22 @@ function MonitorCard({
           {isChartLoading && <p>Loading chart...</p>}
           {chartErrorMessage && <p className="error-message">{chartErrorMessage}</p>}
 
-          <MonitorLatencyChart checks={chartChecks} />
+          <div className="monitor-chart-window-control" aria-label="Chart window hours">
+            {[1, 8, 24].map((hours) => (
+              <button
+                key={hours}
+                type="button"
+                className={chartWindowHours === hours ? 'active' : ''}
+                onClick={() => onChartWindowHoursChange(hours)}
+              >
+                {hours}h
+              </button>
+            ))}
+          </div>
+
+          {!chartErrorMessage && (
+            <MonitorLatencyChart checks={chartChecks} timeWindowHours={chartWindowHours} chartFetchedAt={chartFetchedAt} />
+          )}
 
           <div className="check-history">
             <h4>Recent checks</h4>
