@@ -36,7 +36,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
     if (checks.length === 0) {
         return (
             <div className="monitor-latency-chart">
-                <div className="monitor-latency-chart-state">No chart data yet.</div>
+                <div className="monitor-latency-chart-state">No checks in this window yet.</div>
             </div>
         )
     }

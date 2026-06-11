@@ -340,4 +340,12 @@
     .monitor-meta {
       align-self: flex-start;
     }
+
+    .monitor-latency-chart {
+      min-height: 120px;
+    }
+  
+    .monitor-latency-chart-state {
+      min-height: 96px;
+    }
 }
