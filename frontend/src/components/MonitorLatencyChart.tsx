@@ -81,90 +81,92 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
 
     return (
         <div className="monitor-latency-chart">
-            <svg viewBox="0 0 640 160" role="img" aria-label="Latency trend over the selected time window">
-                <rect
-                    x="0"
-                    y="0"
-                    width="640"
-                    height="160"
-                    rx="8"
-                    fill="#212223"
-                    stroke="#3c3d3d"
-                />
-                {yAxisTicks.map((tick) => {
-                    const y = getYForResponseTime(tick)
+            <div className="monitor-latency-chart-container">
+                <svg viewBox="0 0 640 160" preserveAspectRatio="none" role="img" aria-label="Latency trend over the selected time window">
+                    <rect
+                        x="0"
+                        y="0"
+                        width="640"
+                        height="160"
+                        rx="8"
+                        fill="#212223"
+                        stroke="#3c3d3d"
+                    />
+                    {yAxisTicks.map((tick) => {
+                        const y = getYForResponseTime(tick)
 
-                    return (
-                        <g key={tick}>
-                            <line
-                                x1={padding.left}
-                                x2={width - padding.right}
-                                y1={y}
-                                y2={y}
-                                stroke="#3c3d3d"
-                                strokeWidth="1"
-                                strokeDasharray={tick === 0 ? undefined : '4 4'}
+                        return (
+                            <g key={tick}>
+                                <line
+                                    x1={padding.left}
+                                    x2={width - padding.right}
+                                    y1={y}
+                                    y2={y}
+                                    stroke="#3c3d3d"
+                                    strokeWidth="1"
+                                    strokeDasharray={tick === 0 ? undefined : '4 4'}
+                                />
+                                <text
+                                    x={padding.left - 8}
+                                    y={y}
+                                    fill="#7a8293"
+                                    fontSize="8"
+                                    textAnchor="end"
+                                    dominantBaseline="middle"
+                                >
+                                    {tick}ms
+                                </text>
+                            </g>
+                        )
+                    })}
+                    <polyline
+                        points={linePoints}
+                        fill="none"
+                        stroke="#3673f8"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    {points.map((point, index) => (
+                        <g key={checks[index].id}>
+                            <circle
+                                cx={point.x}
+                                cy={point.y}
+                                r="2"
+                                fill={point.checkResult.status === 'UP' ? '#85bb98' : '#fca5a5'}
                             />
-                            <text
-                                x={padding.left - 8}
-                                y={y}
-                                fill="#7a8293"
-                                fontSize="11"
-                                textAnchor="end"
-                                dominantBaseline="middle"
-                            >
-                                {tick}ms
-                            </text>
+                            <circle
+                                className="monitor-latency-chart-hit-target"
+                                cx={point.x}
+                                cy={point.y}
+                                r="8"
+                                fill="transparent"
+                                tabIndex={0}
+                                aria-label={`${point.checkResult.status} check at ${formatCheckedAt(point.checkResult.checkedAt)}`}
+                                onMouseEnter={() => setActiveChartPoint(point)}
+                                onMouseLeave={() => setActiveChartPoint(null)}
+                                onFocus={() => setActiveChartPoint(point)}
+                                onBlur={() => setActiveChartPoint(null)}
+                            />
                         </g>
-                    )
-                })}
-                <polyline
-                    points={linePoints}
-                    fill="none"
-                    stroke="#3673f8"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-                {points.map((point, index) => (
-                    <g key={checks[index].id}>
-                        <circle
-                            cx={point.x}
-                            cy={point.y}
-                            r="2"
-                            fill={point.checkResult.status === 'UP' ? '#85bb98' : '#fca5a5'}
-                        />
-                        <circle
-                            className="monitor-latency-chart-hit-target"
-                            cx={point.x}
-                            cy={point.y}
-                            r="8"
-                            fill="transparent"
-                            tabIndex={0}
-                            aria-label={`${point.checkResult.status} check at ${formatCheckedAt(point.checkResult.checkedAt)}`}
-                            onMouseEnter={() => setActiveChartPoint(point)}
-                            onMouseLeave={() => setActiveChartPoint(null)}
-                            onFocus={() => setActiveChartPoint(point)}
-                            onBlur={() => setActiveChartPoint(null)}
-                        />
-                    </g>
 
-                ))}
-            </svg>
-            {activeChartPoint && (
-                <div
-                    className="monitor-latency-chart-tooltip"
-                    style={{
-                        left: `${(activeChartPoint.x / width) * 100}%`,
-                        top: `${(activeChartPoint.y / height) * 100}%`,
-                    }}
-                >
-                    <strong>{activeChartPoint.checkResult.responseTimeMs ?? '-'}ms</strong>
-                    <span>{activeChartPoint.checkResult.status}</span>
-                    <span>Code {activeChartPoint.checkResult.statusCode ?? '-'}</span>
-                    <span>{formatCheckedAt(activeChartPoint.checkResult.checkedAt)}</span>
-                </div>
-            )}
+                    ))}
+                </svg>
+                {activeChartPoint && (
+                    <div
+                        className="monitor-latency-chart-tooltip"
+                        style={{
+                            left: `${(activeChartPoint.x / width) * 100}%`,
+                            top: `${(activeChartPoint.y / height) * 100}%`,
+                        }}
+                    >
+                        <strong>{activeChartPoint.checkResult.responseTimeMs ?? '-'}ms</strong>
+                        <span>{activeChartPoint.checkResult.status}</span>
+                        <span>Code {activeChartPoint.checkResult.statusCode ?? '-'}</span>
+                        <span>{formatCheckedAt(activeChartPoint.checkResult.checkedAt)}</span>
+                    </div>
+                )}
+            </div>
             <div className="monitor-latency-chart-axis">
                 <span>{timeWindowHours}h ago</span>
                 <span>Now</span>
