@@ -322,6 +322,24 @@ class MonitorApiIntegrationTest {
 	}
 
 	@Test
+	void getMonitorChecksByTimeWindowFor168HoursReturnsAllChecks() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+				
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors/1/checks?hours=168"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(2));
+	}
+
+	@Test
 	void getMonitorChecksByTimeWindowReturnsBadRequestForUnsupportedHours() throws Exception {
 		mockMvc.perform(get("/api/monitors/1/checks?hours=10"))
 				.andExpect(status().isBadRequest());

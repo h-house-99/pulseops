@@ -77,7 +77,7 @@ public class MonitorService {
     }
 
     public List<CheckResultResponse> getChecksForMonitor(long monitorId, int hours) {
-        if (hours != 1 && hours != 8 && hours != 24) {
+        if (hours != 1 && hours != 8 && hours != 24 && hours != 168) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported hours value");
         }
 

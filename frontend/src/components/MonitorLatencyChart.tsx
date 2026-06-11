@@ -23,6 +23,43 @@ function formatCheckedAt(checkedAt: string) {
     })
 }
 
+function aggregateChecksByHour(checks: CheckResult[]): CheckResult[] {
+    const buckets = new Map<number, CheckResult[]>()
+
+    checks.forEach((check) => {
+        const bucketDate = new Date(check.checkedAt)
+        bucketDate.setMinutes(0, 0, 0)
+
+        const bucketTime = bucketDate.getTime()
+        const bucketChecks = buckets.get(bucketTime) || []
+
+        buckets.set(bucketTime, [...bucketChecks, check])
+    })
+
+    return Array.from(buckets.entries()).map(([bucketTime, bucketChecks]) => {
+        const responseTimes = bucketChecks
+            .map((check) => check.responseTimeMs)
+            .filter((responseTime) => responseTime !== null)
+
+        const averageResponseTime = responseTimes.length > 0
+            ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
+            : null
+
+        const downCheck = bucketChecks.find((check) => check.status === 'DOWN')
+        const representativeCheck = downCheck ?? bucketChecks[0]
+
+        return {
+            ...representativeCheck,
+            id: bucketTime,
+            checkedAt: new Date(bucketTime).toISOString(),
+            responseTimeMs: averageResponseTime,
+            status: downCheck ? 'DOWN' : 'UP',
+            statusCode: downCheck?.statusCode ?? representativeCheck.statusCode,
+            errorMessage: downCheck?.errorMessage ?? representativeCheck.errorMessage,
+        }
+    })
+}
+
 function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoading }: MonitorLatencyChartProps) {
     const [activeChartPoint, setActiveChartPoint] = useState<ChartPoint | null>(null)
 
@@ -40,6 +77,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
             </div>
         )
     }
+    const displayChecks = timeWindowHours === 168 ? aggregateChecksByHour(checks) : checks
     const width = 640
     const height = 160
     const padding = {
@@ -51,7 +89,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
     const chartWidth = width - padding.left - padding.right
     const chartHeight = height - padding.top - padding.bottom
 
-    const responseTimes = checks
+    const responseTimes = displayChecks
         .map((check) => check.responseTimeMs)
         .filter((responseTime) => responseTime !== null)
 
@@ -68,7 +106,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
     const startTime = endTime - timeWindowHours * 60 * 60 * 1000
     const timeWindowMs = endTime - startTime
 
-    const points: ChartPoint[] = checks.map((check) => {
+    const points: ChartPoint[] = displayChecks.map((check) => {
         const checkedAt = new Date(check.checkedAt).getTime()
         const x = padding.left + ((checkedAt - startTime) / timeWindowMs) * chartWidth
         const responseTime = check.responseTimeMs ?? 0
@@ -128,7 +166,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
                         strokeLinejoin="round"
                     />
                     {points.map((point, index) => (
-                        <g key={checks[index].id}>
+                        <g key={displayChecks[index].id}>
                             <circle
                                 cx={point.x}
                                 cy={point.y}
@@ -168,7 +206,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
                 )}
             </div>
             <div className="monitor-latency-chart-axis">
-                <span>{timeWindowHours}h ago</span>
+                <span>{timeWindowHours === 168 ? '7d ago' : `${timeWindowHours}h ago`}</span>
                 <span>Now</span>
             </div>
         </div>

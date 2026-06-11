@@ -109,14 +109,14 @@ function MonitorCard({
           {chartErrorMessage && <p className="error-message">{chartErrorMessage}</p>}
 
           <div className="monitor-chart-window-control" aria-label="Chart window hours">
-            {[1, 8, 24].map((hours) => (
+            {[1, 8, 24, 168].map((hours) => (
               <button
                 key={hours}
                 type="button"
                 className={chartWindowHours === hours ? 'active' : ''}
                 onClick={() => onChartWindowHoursChange(hours)}
               >
-                {hours}h
+                {hours === 168 ? '7d' : `${hours}h`}
               </button>
             ))}
           </div>
