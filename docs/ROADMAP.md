@@ -37,6 +37,19 @@ PulseOps does not include these yet:
 2. Add richer uptime and error-rate analytics.
 3. Add basic incident records for downtime periods.
 
+## Planning Timeline
+
+These dates are rough targets for keeping the MVP focused.
+
+| Target date | Work | Estimate |
+| --- | --- | --- |
+| June 10-14, 2026 | Finish chart window selector, docs, and final cleanup | 1-2 sessions |
+| June 15-21, 2026 | Add chart point details/tooltips and polish loading/error states | 2-3 sessions |
+| June 22-30, 2026 | Prepare deployment config, environment variables, and production database setup | 2-4 sessions |
+| July 1-7, 2026 | Deploy MVP, smoke test real monitors, and fix deployment issues | 2-3 sessions |
+
+Anticipated MVP deployment target: **July 7, 2026**.
+
 ## Next Features
 
 - configurable scheduled check interval

@@ -106,7 +106,6 @@ function MonitorCard({
       {isExpanded && (
         <>
 
-          {isChartLoading && <p>Loading chart...</p>}
           {chartErrorMessage && <p className="error-message">{chartErrorMessage}</p>}
 
           <div className="monitor-chart-window-control" aria-label="Chart window hours">
@@ -123,7 +122,7 @@ function MonitorCard({
           </div>
 
           {!chartErrorMessage && (
-            <MonitorLatencyChart checks={chartChecks} timeWindowHours={chartWindowHours} chartFetchedAt={chartFetchedAt} />
+            <MonitorLatencyChart checks={chartChecks} timeWindowHours={chartWindowHours} chartFetchedAt={chartFetchedAt} isLoading={isChartLoading} />
           )}
 
           <div className="check-history">

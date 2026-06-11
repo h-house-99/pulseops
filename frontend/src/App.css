@@ -160,14 +160,61 @@
 }
 
 .monitor-latency-chart {
+  position: relative;
   margin-top: 16px;
+  min-height: 193px;
+}
+
+.monitor-latency-chart-hit-target {
+  cursor: pointer;
+  outline: none;
+  pointer-events: all;
+}
+
+.monitor-latency-chart-hit-target:focus-visible {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.monitor-latency-chart-tooltip {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  color: #d1d5db;
+  background: #151212;
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.25);
+}
+
+.monitor-latency-chart-tooltip strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.monitor-latency-chart-state {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  color: #7a8293;
+  background: #212223;
+  font-size: 13px;
 }
 
 .monitor-latency-chart svg {
   display: block;
   width: 100%;
   height: auto;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .monitor-latency-chart-axis {
