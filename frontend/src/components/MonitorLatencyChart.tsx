@@ -61,7 +61,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
     function getYForResponseTime(responseTime: number) {
         return padding.top + chartHeight - (responseTime / visual95thPercentileResponseTime) * chartHeight
     }
-    const yAxisTicks = [0, Math.round(visual95thPercentileResponseTime / 2), visual95thPercentileResponseTime]
+    const yAxisTicks = Array.from(new Set([0, Math.round(visual95thPercentileResponseTime / 2), visual95thPercentileResponseTime]))
 
 
     const endTime = chartFetchedAt
@@ -166,7 +166,7 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
                 </div>
             )}
             <div className="monitor-latency-chart-axis">
-                <span>{timeWindowHours} hour(s) ago</span>
+                <span>{timeWindowHours}h ago</span>
                 <span>Now</span>
             </div>
         </div>
