@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +26,7 @@ public class MonitorService {
     private final EndpointCheckClient endpointCheckClient;
     private final MonitorRepository monitorRepository;
     private final CheckResultRepository checkResultRepository;
+    private static final Logger logger = LoggerFactory.getLogger(MonitorService.class);
 
     public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository) {
         this.endpointCheckClient = endpointCheckClient;
@@ -48,19 +51,19 @@ public class MonitorService {
         Monitor monitor = monitorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
 
-        Instant startedAt = Instant.now();
-        EndpointCheckResult endpointCheckResult = endpointCheckClient.checkEndpoint(monitor.getUrl());
-        Instant checkedAt = Instant.now();
-        Integer statusCode = endpointCheckResult.statusCode();
-        String errorMessage = endpointCheckResult.errorMessage();
-        Long responseTimeMs = Duration.between(startedAt, checkedAt).toMillis();
-        String status = statusCode != null && statusCode >= 200 && statusCode < 400 ? "UP" : "DOWN";
-
-        monitor.updateAfterCheck(status, statusCode, responseTimeMs, checkedAt);
-        monitorRepository.save(monitor);
-        CheckResult checkResult = new CheckResult(monitor, status, statusCode, responseTimeMs, checkedAt, errorMessage);
-        checkResultRepository.save(checkResult);
+        CheckResult checkResult = checkAndSaveResult(monitor);
         return toCheckResultResponse(checkResult, monitor.getId());
+    }
+
+    public void checkAllMonitors() {
+        List<Monitor> monitors = monitorRepository.findAllByOrderByIdAsc();
+        for (Monitor monitor : monitors) {
+            try {
+                checkAndSaveResult(monitor);
+            } catch (Exception e) {
+                logger.warn("Scheduled check failed for monitor {}", monitor.getId(), e);
+            }
+        }
     }
 
     public List<CheckResultResponse> getChecksForMonitor(long monitorId) {
@@ -68,6 +71,20 @@ public class MonitorService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
 
         return checkResultRepository.findTop5ByMonitorOrderByCheckedAtDesc(monitor)
+                .stream()
+                .map(checkResult -> toCheckResultResponse(checkResult, monitorId))
+                .toList();
+    }
+
+    public List<CheckResultResponse> getChecksForMonitor(long monitorId, int hours) {
+        if (hours != 1 && hours != 8 && hours != 24 && hours != 168) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported hours value");
+        }
+
+        Monitor monitor = monitorRepository.findById(monitorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
+
+        return checkResultRepository.findByMonitorAndCheckedAtGreaterThanEqualOrderByCheckedAtAsc(monitor, Instant.now().minus(Duration.ofHours(hours)))
                 .stream()
                 .map(checkResult -> toCheckResultResponse(checkResult, monitorId))
                 .toList();
@@ -102,5 +119,21 @@ public class MonitorService {
 
     private CheckResultResponse toCheckResultResponse(CheckResult checkResult, long monitorId) {
         return new CheckResultResponse(checkResult.getId(), monitorId, checkResult.getStatus(), checkResult.getStatusCode(), checkResult.getResponseTimeMs(), checkResult.getCheckedAt(), checkResult.getErrorMessage());
+    }
+
+    private CheckResult checkAndSaveResult(Monitor monitor) {
+        Instant startedAt = Instant.now();
+        EndpointCheckResult endpointCheckResult = endpointCheckClient.checkEndpoint(monitor.getUrl());
+        Instant checkedAt = Instant.now();
+        Integer statusCode = endpointCheckResult.statusCode();
+        String errorMessage = endpointCheckResult.errorMessage();
+        Long responseTimeMs = Duration.between(startedAt, checkedAt).toMillis();
+        String status = statusCode != null && statusCode >= 200 && statusCode < 400 ? "UP" : "DOWN";
+
+        monitor.updateAfterCheck(status, statusCode, responseTimeMs, checkedAt);
+        monitorRepository.save(monitor);
+        CheckResult checkResult = new CheckResult(monitor, status, statusCode, responseTimeMs, checkedAt, errorMessage);
+        checkResultRepository.save(checkResult);
+        return checkResult;
     }
 }

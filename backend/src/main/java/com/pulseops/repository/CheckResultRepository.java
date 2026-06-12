@@ -1,5 +1,6 @@
 package com.pulseops.repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,8 @@ import com.pulseops.model.MonitorSummaryStats;
 
 public interface CheckResultRepository extends JpaRepository<CheckResult, Long> {
     List<CheckResult> findTop5ByMonitorOrderByCheckedAtDesc(Monitor monitor);
+
+    List<CheckResult> findByMonitorAndCheckedAtGreaterThanEqualOrderByCheckedAtAsc(Monitor monitor, Instant checkedAt);
 
     @Query("""
             SELECT new com.pulseops.model.MonitorSummaryStats(
@@ -29,4 +32,6 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
     Optional<CheckResult> findTopByMonitorAndErrorMessageIsNotNullOrderByCheckedAtDesc(Monitor monitor);
 
     Optional<CheckResult> findTopByMonitorAndStatusOrderByCheckedAtDesc(Monitor monitor, String status);
+
+    void deleteByCheckedAtBefore(Instant checkedAt);
 }

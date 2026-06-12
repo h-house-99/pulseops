@@ -23,3 +23,6 @@ logs/
 
 # agents
 AGENTS.md
+
+# decisions
+docs/DECISIONS.md

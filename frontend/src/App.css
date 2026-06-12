@@ -1,5 +1,5 @@
 .app-shell {
-  width: min(960px, calc(100% - 40px));
+  width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
   padding: 72px 0;
 }
@@ -32,7 +32,7 @@
 
 .monitor-card {
   display: block;
-  max-width: 720px;
+  max-width: 100%;
   padding: 20px;
   border: 1px solid #3c3d3d;
   border-radius: 8px;
@@ -43,50 +43,6 @@
   display: flex;
   justify-content: space-between;
   gap: 24px;
-}
-
-.check-history {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #3c3d3d;
-}
-
-.check-history h4 {
-  margin: 0 0 12px;
-  font-size: 14px;
-}
-
-.check-history-header, 
-.check-history li {
-  display: grid;
-  grid-template-columns: 80px 64px 80px 1fr;
-  gap: 12px;
-  align-items: center;
-}
-
-.check-history-header {
-  margin-bottom: 8px;
-  color: #7a8293;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.check-history ul {
-  display: grid;
-  gap: 8px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.check-history li {
-  color: #9d9fa1;
-  font-size: 14px;
-}
-
-.check-history .status-pill {
-  justify-self: start;
 }
 
 .monitor-card h3 {
@@ -103,10 +59,12 @@
 .monitor-summary {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 8px;
   color: #9d9fa1;
   font-size: 13px;
+  margin-bottom: 12px;
 }
 
 .monitor-summary span {
@@ -131,6 +89,102 @@
 .error-message {
   color: #fca5a5;
   margin: 0 0 16px;
+}
+
+.monitor-chart-window-control {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 4px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  background: #212223;
+}
+
+.monitor-chart-window-control button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #9d9fa1;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.monitor-chart-window-control button.active {
+  color: #ffffff;
+  background: #3673f8;
+}
+
+.monitor-latency-chart {
+  position: relative;
+  margin-top: 16px;
+  min-height: 193px;
+}
+
+.monitor-latency-chart-hit-target {
+  cursor: pointer;
+  outline: none;
+  pointer-events: all;
+}
+
+.monitor-latency-chart-hit-target:focus-visible {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.monitor-latency-chart-tooltip {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  color: #d1d5db;
+  background: #151212;
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.25);
+}
+
+.monitor-latency-chart-state {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  border: 1px solid #3c3d3d;
+  border-radius: 8px;
+  color: #7a8293;
+  background: #212223;
+  font-size: 13px;
+}
+
+.monitor-latency-chart-container {
+  position: relative;
+}
+
+.monitor-latency-chart svg {
+  display: block;
+  width: 100%;
+  height: clamp(180px, 18vw, 260px);
+  overflow: hidden;
+}
+
+.monitor-latency-chart-tooltip strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.monitor-latency-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: #7a8293;
+  font-size: 12px;
 }
 
 .monitor-meta {
@@ -203,7 +257,7 @@
   display: grid;
   grid-template-columns: 1fr 1.6fr auto;
   gap: 12px;
-  max-width: 720px;
+  max-width: 100%;
   margin-bottom: 16px;
 }
 
@@ -247,5 +301,17 @@
   
     .monitor-meta {
       align-self: flex-start;
+    }
+
+    .monitor-latency-chart {
+      min-height: 140px;
+    }
+
+    .monitor-latency-chart svg {
+      height: 140px;
+    }
+  
+    .monitor-latency-chart-state {
+      min-height: 140px;
     }
 }

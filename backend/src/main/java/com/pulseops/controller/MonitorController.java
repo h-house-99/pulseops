@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,6 +45,11 @@ public class MonitorController {
     @GetMapping("/api/monitors/{id}/checks/recent")
     public List<CheckResultResponse> getMonitorChecks(@PathVariable long id) {
         return monitorService.getChecksForMonitor(id);
+    }
+
+    @GetMapping("/api/monitors/{id}/checks")
+    public List<CheckResultResponse> getMonitorChecks(@PathVariable long id, @RequestParam(required = false, defaultValue = "24") int hours) {
+        return monitorService.getChecksForMonitor(id, hours);
     }
 
     @DeleteMapping("/api/monitors/{id}")

@@ -133,6 +133,8 @@ Example request:
 
 Returns a `Monitor` response.
 
+If the request is invalid, the backend returns `400`.
+
 ## List Monitors
 
 Returns all monitored API endpoints with their latest known check status.
@@ -195,7 +197,13 @@ Example `DOWN` result from a request failure:
 }
 ```
 
-If the monitor does not exist, the backend returns `404`.
+Errors:
+
+- If the monitor does not exist, the backend returns `404`.
+
+## Scheduled Checks
+
+The backend also runs scheduled checks for all monitors every 5 minutes. Scheduled checks use the same status rules and stored `Check Result` shape as manual checks, but they do not have a separate public API endpoint.
 
 ## List Monitor Checks
 
@@ -207,7 +215,35 @@ GET /api/monitors/{id}/checks/recent
 
 Returns an array of `Check Result` responses.
 
-If the monitor does not exist, the backend returns `404`.
+Errors:
+
+- If the monitor does not exist, the backend returns `404`.
+
+## List Monitor Checks By Time Window
+
+Returns check results for one monitor within the last number of hours. This endpoint is intended for chart rendering.
+
+```http
+GET /api/monitors/{id}/checks
+GET /api/monitors/{id}/checks?hours=24
+```
+
+If `hours` is omitted, the backend defaults to `24`.
+
+Allowed `hours` values:
+
+- `1`
+- `8`
+- `24`
+
+Results are ordered by `checkedAt` ascending, oldest to newest.
+
+Returns an array of `Check Result` responses.
+
+Errors:
+
+- If the monitor does not exist, the backend returns `404`.
+- If `hours` is unsupported, the backend returns `400`.
 
 ## Delete Monitor
 
@@ -219,4 +255,6 @@ DELETE /api/monitors/{id}
 
 Successful responses return `204 No Content`.
 
-If the monitor does not exist, the backend returns `404`.
+Errors:
+
+- If the monitor does not exist, the backend returns `404`.

@@ -72,6 +72,8 @@ Run backend commands from `backend/`.
 
 The API runs at `http://localhost:8080` by default.
 
+When the backend is running, scheduled monitor checks run every 5 minutes and write new check results to the database.
+
 Automated tests use an in-memory H2 database configured in `backend/src/test/resources/application.properties`.
 
 ## Frontend

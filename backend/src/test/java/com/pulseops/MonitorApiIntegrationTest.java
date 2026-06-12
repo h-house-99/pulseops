@@ -1,7 +1,10 @@
 package com.pulseops;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +21,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.pulseops.entity.CheckResult;
+import com.pulseops.entity.Monitor;
 import com.pulseops.model.EndpointCheckResult;
+import com.pulseops.repository.CheckResultRepository;
+import com.pulseops.repository.MonitorRepository;
+import com.pulseops.service.CheckResultRetentionService;
 import com.pulseops.service.EndpointCheckClient;
+import com.pulseops.service.MonitorService;
 
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -29,12 +38,74 @@ class MonitorApiIntegrationTest {
 	@Autowired
 	private MockMvc mockMvc;
 
+	@Autowired
+	private MonitorService monitorService;
+
+	@Autowired
+	private MonitorRepository monitorRepository;
+
+	@Autowired
+	private CheckResultRepository checkResultRepository;
+
+	@Autowired
+	private CheckResultRetentionService checkResultRetentionService;
+
 	@Test
 	void getMonitorsInitiallyReturnsEmptyArray() throws Exception {
 		mockMvc.perform(get("/api/monitors"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").isArray())
 				.andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void getMonitorsReturnsMonitors() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs\",\"url\":\"https://example.com/status\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$").isArray())
+				.andExpect(jsonPath("$.length()").value(1))
+				.andExpect(jsonPath("$[0].id").value(1))
+				.andExpect(jsonPath("$[0].name").value("API Docs"))
+				.andExpect(jsonPath("$[0].url").value("https://example.com/status"));
+	}
+
+	@Test
+	void checkAllMonitorsChecksAllMonitors() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs\",\"url\":\"https://example.com/status\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"API Docs 2\",\"url\":\"https://example.com/status/500\"}"))
+			.andExpect(status().isOk());
+
+		monitorService.checkAllMonitors();
+
+		mockMvc.perform(get("/api/monitors"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].name").value("API Docs"))
+				.andExpect(jsonPath("$[0].status").value("UP"))
+				.andExpect(jsonPath("$[0].lastStatusCode").value(200))
+				.andExpect(jsonPath("$[1].name").value("API Docs 2"))
+				.andExpect(jsonPath("$[1].status").value("DOWN"))
+				.andExpect(jsonPath("$[1].lastStatusCode").value(500));
+
+		mockMvc.perform(get("/api/monitors/1/checks/recent"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].status").value("UP"))
+				.andExpect(jsonPath("$[0].statusCode").value(200));
+
+		mockMvc.perform(get("/api/monitors/2/checks/recent"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].status").value("DOWN"))
+				.andExpect(jsonPath("$[0].statusCode").value(500));
 	}
 
 	@Test
@@ -248,6 +319,56 @@ class MonitorApiIntegrationTest {
 	}
 
 	@Test
+	void getMonitorChecksByTimeWindowReturnsChecksInAscendingOrder() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors/1/checks"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(2))
+				.andExpect(jsonPath("$[0].id").value(1))
+				.andExpect(jsonPath("$[1].id").value(2));
+	}
+
+	@Test
+	void getMonitorChecksByTimeWindowFor168HoursReturnsAllChecks() throws Exception {
+		mockMvc.perform(post("/api/monitors")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
+				.andExpect(status().isOk());
+				
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(post("/api/monitors/1/check-now"))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/monitors/1/checks?hours=168"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(2));
+	}
+
+	@Test
+	void getMonitorChecksByTimeWindowReturnsBadRequestForUnsupportedHours() throws Exception {
+		mockMvc.perform(get("/api/monitors/1/checks?hours=10"))
+				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void getMonitorChecksByTimeWindowReturnsNotFoundForUnknownMonitor() throws Exception {
+		mockMvc.perform(get("/api/monitors/1/checks?hours=24"))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
 	void getMonitorsReturnsEmptySummaryStatsForNewMonitor() throws Exception {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -368,6 +489,20 @@ class MonitorApiIntegrationTest {
 	void deleteMonitorReturnsNotFoundForUnknownMonitor() throws Exception {
 		mockMvc.perform(delete("/api/monitors/1"))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void checkResultRetentionServiceDeletesCheckResultsOlderThan30Days() throws Exception {
+		Monitor monitor = monitorRepository.save(new Monitor("HTTPBin", "https://httpbin.org/status/200", "UNKNOWN", Instant.now()));
+
+		CheckResult oldCheckResult = checkResultRepository.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now().minus(Duration.ofDays(31)), null));
+
+		CheckResult recentCheckResult = checkResultRepository.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now(), null));
+
+		checkResultRetentionService.deleteExpiredCheckResults();
+
+		assertThat(checkResultRepository.findById(oldCheckResult.getId())).isEmpty();
+		assertThat(checkResultRepository.findById(recentCheckResult.getId())).isPresent();
 	}
 
 	@TestConfiguration

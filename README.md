@@ -2,9 +2,9 @@
 
 PulseOps is a full-stack API monitoring dashboard built with a React frontend, a Spring Boot REST API, and PostgreSQL.
 
-Version 1 is complete. It supports adding API monitors, running manual health checks, storing recent check history, deleting monitors, and viewing status, latency, uptime percentage, response-time summaries, latest errors, and last failure time from the frontend.
+PulseOps currently supports adding API monitors, running manual and scheduled health checks, storing check history, deleting monitors, and viewing status, latency, uptime percentage, response-time summaries, latest errors, last failure time, and selectable latency charts from the frontend.
 
-Version 2 will focus on scheduled checks, richer uptime analytics, incident records, alerts, and AI-assisted incident summaries.
+The roadmap tracks upcoming work such as richer uptime analytics, incident records, alerts, and AI-assisted incident summaries.
 
 ## Screenshots
 
@@ -18,13 +18,13 @@ Build a resume-ready app that demonstrates:
 - HTTP client calls from the backend
 - PostgreSQL persistence
 - API health checks
-- latency tracking, uptime summaries, and recent check history
+- latency tracking, uptime summaries, and chart-window analytics
 - React dashboard UI
 - clean separation between frontend and backend
 
 ## Current Demo Story
 
-A user adds an API endpoint to the monitor list, runs a health check, and sees the latest status, status code, response time, uptime percentage, response-time summary statistics, latest error, last failure time, and recent check history.
+A user adds an API endpoint to the monitor list, runs a health check, and sees the latest status, status code, response time, selected-window summary statistics, latest error, last failure time, and a selectable latency chart.
 
 ## Tech Stack
 
@@ -53,28 +53,23 @@ pulseops/
 - [Architecture](docs/ARCHITECTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 
-## Version 1 Complete
+## Current Features
 
 Users can:
 
 - add an API endpoint to the monitor list
 - manually run a health check
+- receive scheduled background checks every 5 minutes
 - see status code, response time, and last checked time
 - see uptime percentage and total checks
 - see average, fastest, and slowest response times
 - see the latest request error and last failure time
-- view recent check history
+- view latency charts for the last 1, 8, 24 hours, or 7 days
+- inspect chart points for exact check details
 - delete monitors and their check history
 
 The backend also exposes a curated public APIs endpoint that can be connected to the frontend discovery flow later.
 
-## Version 2 Ideas
+## What Is Next
 
-- scheduled background checks
-- richer uptime and error-rate analytics
-- incident records
-- alerts or notifications
-- frontend discovery flow for curated public APIs
-- AI-assisted incident summaries
-- deployment
-- alternate Go or Python backend implementations
+See the [Roadmap](docs/ROADMAP.md) for planned work and feature priorities. The next likely product step is preparing the dashboard for a read-only public demo.
