@@ -45,6 +45,7 @@
   gap: 24px;
 }
 
+
 .monitor-card h3 {
   margin: 0 0 6px;
   font-size: 18px;
@@ -155,7 +156,7 @@
 .monitor-latency-chart-state {
   display: grid;
   place-items: center;
-  min-height: 160px;
+  height: clamp(180px, 18vw, 260px);
   border: 1px solid #3c3d3d;
   border-radius: 8px;
   color: #7a8293;
