@@ -14,9 +14,6 @@ function App() {
   const [newMonitorName, setNewMonitorName] = useState('')
   const [newMonitorUrl, setNewMonitorUrl] = useState('')
   const [expandedMonitorIds, setExpandedMonitorIds] = useState<number[]>([])
-  const [checksByMonitorId, setChecksByMonitorId] = useState<Record<number, CheckResult[]>>({})
-  const [loadingHistoryMonitorIds, setLoadingHistoryMonitorIds] = useState<number[]>([])
-  const [historyErrorByMonitorId, setHistoryErrorByMonitorId] = useState<Record<number, string | null>>({})
   const [checkingMonitorIds, setCheckingMonitorIds] = useState<number[]>([])
   const [cachedChartChecksByMonitorId, setCachedChartChecksByMonitorId] = useState<Record<number, CheckResult[]>>({})
   const [loadingChartMonitorIds, setLoadingChartMonitorIds] = useState<number[]>([])
@@ -37,15 +34,6 @@ function App() {
 
     const data: Monitor[] = await response.json()
 
-    return data
-  }, [])
-
-  const fetchRecentChecks = useCallback(async (monitorId: number) => {
-    const response = await fetch(`${BASE_URL}/monitors/${monitorId}/checks/recent`)
-    if (!response.ok) {
-      throw new Error('Could not load check results.')
-    }
-    const data: CheckResult[] = await response.json()
     return data
   }, [])
 
@@ -84,36 +72,16 @@ function App() {
     setCachedChartWindowHoursByMonitorId((currentValues) => ({ ...currentValues, ...nextCachedChartWindowHoursByMonitorId }))
   }, [fetchChartChecks])
 
-  const refreshExpandedCheckHistory = useCallback(async (monitorIds: number[]) => {
-    if (monitorIds.length === 0) {
-      return
-    }
-
-    const nextChecksByMonitorId: Record<number, CheckResult[]> = {}
-
-    for (const monitorId of monitorIds) {
-      try {
-        const checks = await fetchRecentChecks(monitorId)
-        nextChecksByMonitorId[monitorId] = checks
-        setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: null }))
-      } catch (error) {
-        setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
-      }
-    }
-    setChecksByMonitorId((currentChecks) => ({ ...currentChecks, ...nextChecksByMonitorId }))
-  }, [fetchRecentChecks])
-
   const refreshMonitorDashboard = useCallback(async () => {
     try {
       const data = await fetchMonitors()
       setMonitors(data)
       setErrorMessage(null)
-      await refreshExpandedCheckHistory(expandedMonitorIdsRef.current)
       await refreshExpandedChartHistory(expandedMonitorIdsRef.current, chartWindowHoursRef.current)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.')
     }
-  }, [fetchMonitors, refreshExpandedCheckHistory, refreshExpandedChartHistory])
+  }, [fetchMonitors, refreshExpandedChartHistory])
 
   async function handleCheckNow(monitorId: number) {
     try {
@@ -130,13 +98,6 @@ function App() {
       const data = await fetchMonitors()
       setMonitors(data)
       if (expandedMonitorIds.includes(monitorId)) {
-        try {
-          const checkData = await fetchRecentChecks(monitorId)
-          setChecksByMonitorId((currentChecks) => ({ ...currentChecks, [monitorId]: checkData }))
-          setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: null }))
-        } catch (error) {
-          setHistoryErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
-        }
 
         try {
           const fetchedAt = Date.now()
@@ -149,11 +110,6 @@ function App() {
           setChartErrorByMonitorId((currentErrors) => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
         }
       } else {
-        setChecksByMonitorId((currentChecks) => {
-          const nextChecks = { ...currentChecks }
-          delete nextChecks[monitorId]
-          return nextChecks
-        })
         setCachedChartChecksByMonitorId((currentChecks) => {
           const nextChecks = { ...currentChecks }
           delete nextChecks[monitorId]
@@ -212,11 +168,10 @@ function App() {
 
     setExpandedMonitorIds((currentIds) => [...currentIds, monitorId])
 
-    const hasRecentChecks = checksByMonitorId[monitorId]
     const hasChartChecks = cachedChartChecksByMonitorId[monitorId]
     const hasChartChecksForSelectedWindow = hasChartChecks && cachedChartWindowHoursByMonitorId[monitorId] === chartWindowHours
 
-    if (hasRecentChecks && hasChartChecksForSelectedWindow) {
+    if (hasChartChecksForSelectedWindow) {
       return
     }
 
@@ -234,19 +189,6 @@ function App() {
       setChartErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
     } finally {
       setLoadingChartMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
-    }
-
-    try {
-      if (!hasRecentChecks) {
-        setLoadingHistoryMonitorIds((currentIds) => [...currentIds, monitorId])
-        setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: null }))
-        const data: CheckResult[] = await fetchRecentChecks(monitorId)
-        setChecksByMonitorId(currentChecks => ({ ...currentChecks, [monitorId]: data }))
-      }
-    } catch (error) {
-      setHistoryErrorByMonitorId(currentErrors => ({ ...currentErrors, [monitorId]: error instanceof Error ? error.message : 'Something went wrong.' }))
-    } finally {
-      setLoadingHistoryMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
     }
   }
 
@@ -266,17 +208,6 @@ function App() {
       const data = await fetchMonitors()
       setMonitors(data)
       setExpandedMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
-      setChecksByMonitorId(currentChecks => {
-        const nextChecks = { ...currentChecks }
-        delete nextChecks[monitorId]
-        return nextChecks
-      })
-      setHistoryErrorByMonitorId(currentErrors => {
-        const nextErrors = { ...currentErrors }
-        delete nextErrors[monitorId]
-        return nextErrors
-      })
-      setLoadingHistoryMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
       setCheckingMonitorIds(currentIds => currentIds.filter(id => id !== monitorId))
       setCachedChartChecksByMonitorId(currentChecks => {
         const nextChecks = { ...currentChecks }
@@ -331,7 +262,7 @@ function App() {
       <p className="eyebrow">PulseOps</p>
       <h1>API monitoring dashboard</h1>
       <p className="intro">
-        Track API health, latency, and recent check results from one focused dashboard.
+        Track API health, latency, and check results from one focused dashboard.
       </p>
       <section className="monitor-section">
         <h2>Monitors</h2>
@@ -359,7 +290,7 @@ function App() {
           const chartChecks = hasChartChecksForSelectedWindow ? cachedChartChecksByMonitorId[monitor.id] ?? [] : []
           const latestChartCheck = chartChecks.at(-1)
           const chartFetchedAt = cachedChartFetchedAtByMonitorId[monitor.id]
-            ?? (latestChartCheck ? new Date(latestChartCheck.checkedAt).getTime() : 0)
+            ?? (latestChartCheck ? new Date(latestChartCheck.checkedAt).getTime() : Date.now())
           const isChartDataPending = isExpanded && !hasChartChecksForSelectedWindow && !chartErrorMessage
 
           return (
@@ -368,10 +299,7 @@ function App() {
               monitor={monitor}
               onCheckNow={handleCheckNow}
               isExpanded={isExpanded}
-              checks={checksByMonitorId[monitor.id] ?? []}
-              isHistoryLoading={loadingHistoryMonitorIds.includes(monitor.id)}
               isChecking={checkingMonitorIds.includes(monitor.id)}
-              historyErrorMessage={historyErrorByMonitorId[monitor.id] ?? null}
               chartChecks={chartChecks}
               isChartLoading={loadingChartMonitorIds.includes(monitor.id) || isChartDataPending}
               chartErrorMessage={chartErrorMessage}

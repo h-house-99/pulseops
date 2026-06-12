@@ -14,10 +14,12 @@ PulseOps currently supports:
 - see total checks and uptime percentage
 - see average, fastest, and slowest response times
 - see the latest request error and last failure time
-- view recent check history for an endpoint
-- view latency charts for the last 1, 8, or 24 hours
+- view latency charts for the last 1, 8, 24 hours, or 7 days
+- show an hourly aggregated chart for the 7d window
 - inspect chart points for exact latency, status, status code, and checked time
+- see chart-window summary stats in expanded monitor cards
 - delete a monitor and its check history
+- clean up check results older than 30 days
 
 The backend also includes a curated public API list endpoint. A frontend discovery flow can be added later.
 
@@ -38,9 +40,9 @@ PulseOps does not include these yet:
 
 ## Recommended Next
 
-1. Improve dashboard layout for wider screens.
-2. Make expanded chart analytics reflect the selected time window.
-3. Add backend retention cleanup for old check results.
+1. Smooth chart loading states and tooltip edge behavior.
+2. Normalize failure reasons before showing raw backend error text.
+3. Prepare the public demo as read-only with curated monitors.
 
 ## Near-Term TODO
 
@@ -53,16 +55,14 @@ PulseOps does not include these yet:
 
 ### Chart And Analytics
 
-- Add a 7d chart window and make it the default expanded view.
-- Move uptime, check count, and latency summary stats into the expanded chart section.
-- Make expanded summary stats reflect the selected time window.
-- Remove the recent checks table if chart tooltips cover the same detail.
+- Keep expanded chart layout stable while new chart data is loading.
 - Consider clamping chart tooltips near left and right chart edges.
+- Normalize failure reasons before showing raw backend error text.
 
 ### Backend Data
 
-- Add retention cleanup for check results older than 7 days.
 - Consider a combined history endpoint that returns checks plus summary stats for a time window.
+- Consider backend aggregation or caching for the 7d chart before public deployment.
 - Disable public create, delete, and manual check actions for the deployed read-only demo.
 - Seed the deployed demo with a curated monitor list.
 
@@ -72,8 +72,8 @@ These dates are rough targets for keeping the MVP focused.
 
 | Target date | Work | Estimate |
 | --- | --- | --- |
-| June 10-14, 2026 | Finish chart window selector, chart point details, docs, and final cleanup | 1-2 sessions |
-| June 15-21, 2026 | Add 7d analytics, selected-window summary stats, and layout polish | 2-3 sessions |
+| June 10-14, 2026 | Finish 7d chart support, retention cleanup, chart point details, docs, and UI polish | 1-2 sessions |
+| June 15-21, 2026 | Add read-only MVP controls and final dashboard polish | 2-3 sessions |
 | June 22-30, 2026 | Prepare read-only deployment config, curated monitors, environment variables, and production database setup | 2-4 sessions |
 | July 1-7, 2026 | Deploy MVP, smoke test real monitors, and fix deployment issues | 2-3 sessions |
 
@@ -83,8 +83,6 @@ Anticipated MVP deployment target: **July 7, 2026**.
 
 - configurable scheduled check interval
 - uptime/status timeline charts
-- 7d chart window
-- selected-window analytics summaries
 - error rate summaries
 - basic incident records
 - alerts or notifications

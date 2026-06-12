@@ -5,10 +5,7 @@ type MonitorCardProps = {
   monitor: Monitor
   onCheckNow: (monitorId: number) => void
   isExpanded: boolean
-  checks: CheckResult[]
-  isHistoryLoading: boolean
   isChecking: boolean
-  historyErrorMessage: string | null
   chartChecks: CheckResult[]
   isChartLoading: boolean
   chartErrorMessage: string | null
@@ -17,6 +14,33 @@ type MonitorCardProps = {
   chartFetchedAt: number
   onToggleCheckHistory: () => void
   onDeleteMonitor: () => void
+}
+
+type CheckStats = {
+  totalChecks: number
+  uptimePercentage: number
+  averageResponseTimeMs: number | null
+  fastestResponseTimeMs: number | null
+  slowestResponseTimeMs: number | null
+}
+
+function getCheckStats(checks: CheckResult[]): CheckStats {
+  const responseTimes = checks
+    .map((check) => check.responseTimeMs)
+    .filter((responseTime): responseTime is number => responseTime !== null)
+
+  const upChecks = checks.filter((check) => check.status === 'UP').length
+
+  return {
+    totalChecks: checks.length,
+    uptimePercentage: checks.length === 0 ? 0 : Math.round((upChecks / checks.length) * 100),
+    averageResponseTimeMs:
+      responseTimes.length === 0
+        ? null
+        : Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length),
+    fastestResponseTimeMs: responseTimes.length === 0 ? null : Math.min(...responseTimes),
+    slowestResponseTimeMs: responseTimes.length === 0 ? null : Math.max(...responseTimes),
+  }
 }
 
 function formatCheckedAt(checkedAt: string) {
@@ -32,10 +56,7 @@ function MonitorCard({
   monitor,
   onCheckNow,
   isExpanded,
-  checks,
-  isHistoryLoading,
   isChecking,
-  historyErrorMessage,
   chartChecks,
   isChartLoading,
   chartErrorMessage,
@@ -45,6 +66,8 @@ function MonitorCard({
   onToggleCheckHistory,
   onDeleteMonitor,
 }: MonitorCardProps) {
+  const checkStats = getCheckStats(chartChecks)
+
   return (
     <div className="monitor-card">
       <div className="monitor-card-main">
@@ -68,7 +91,7 @@ function MonitorCard({
           <span>{monitor.lastResponseTimeMs === null ? '-' : `${monitor.lastResponseTimeMs}ms`}</span>
           <button
             className="icon-button"
-            aria-label={`${isExpanded ? 'Hide' : 'Show'} ${monitor.name} check history`}
+            aria-label={`${isExpanded ? 'Hide' : 'Show'} ${monitor.name} details`}
             onClick={onToggleCheckHistory}
           >
             {isExpanded ? '⌃' : '⌄'}
@@ -83,24 +106,12 @@ function MonitorCard({
         </div>
       </div>
 
-      <div className="monitor-summary">
-        <span>Uptime {monitor.uptimePercentage === null ? '-' : `${monitor.uptimePercentage}%`}</span>
-        <span>Checks {monitor.totalChecks}</span>
-        <span>Avg {monitor.averageResponseTimeMs === null ? '-' : `${monitor.averageResponseTimeMs}ms`}</span>
-        <span>Fast {monitor.fastestResponseTimeMs === null ? '-' : `${monitor.fastestResponseTimeMs}ms`}</span>
-        <span>Slow {monitor.slowestResponseTimeMs === null ? '-' : `${monitor.slowestResponseTimeMs}ms`}</span>
-      </div>
-
-      {monitor.lastFailureAt && (
-        <p className="monitor-summary-last-failure">
-          Last failure {formatCheckedAt(monitor.lastFailureAt)}
-        </p>
-      )}
-
-      {monitor.latestErrorMessage && (
-        <p className="monitor-summary-latest-error">
-          {monitor.latestErrorMessage}
-        </p>
+      {monitor.status === 'DOWN' && monitor.latestErrorMessage && (
+        <>
+          <p className="monitor-summary-latest-error">
+            <strong>Error:</strong> {monitor.latestErrorMessage}
+          </p>
+        </>
       )}
 
       {isExpanded && (
@@ -125,38 +136,25 @@ function MonitorCard({
             <MonitorLatencyChart checks={chartChecks} timeWindowHours={chartWindowHours} chartFetchedAt={chartFetchedAt} isLoading={isChartLoading} />
           )}
 
-          <div className="check-history">
-            <h4>Recent checks</h4>
-            <div className="check-history-header">
-              <span>Status</span>
-              <span>Code</span>
-              <span>Latency</span>
-              <span>Checked</span>
-            </div>
-
-            {isHistoryLoading && <p>Loading checks...</p>}
-
-            {historyErrorMessage && <p className="error-message">{historyErrorMessage}</p>}
-
-            {!isHistoryLoading && !historyErrorMessage && checks.length === 0 && (
-              <p>No checks recorded yet.</p>
-            )}
-
-            {!isHistoryLoading && !historyErrorMessage && checks.length > 0 && (
-              <ul>
-                {checks.map((check) => (
-                  <li key={check.id}>
-                    <span className={`status-pill status-${check.status.toLowerCase()}`}>
-                      {check.status}
-                    </span>
-                    <span>{check.statusCode ?? '-'}</span>
-                    <span>{check.responseTimeMs === null ? '-' : `${check.responseTimeMs}ms`}</span>
-                    <span>{formatCheckedAt(check.checkedAt)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="monitor-summary">
+            <span>Uptime: {checkStats.uptimePercentage}%</span>
+            <span>Checks: {checkStats.totalChecks}</span>
+            <span>Avg: {checkStats.averageResponseTimeMs === null ? '-' : `${checkStats.averageResponseTimeMs}ms`}</span>
+            <span>Fast: {checkStats.fastestResponseTimeMs === null ? '-' : `${checkStats.fastestResponseTimeMs}ms`}</span>
+            <span>Slow: {checkStats.slowestResponseTimeMs === null ? '-' : `${checkStats.slowestResponseTimeMs}ms`}</span>
           </div>
+
+          {monitor.lastFailureAt && (
+            <p className="monitor-summary-last-failure">
+              <strong>Last failure:</strong> {formatCheckedAt(monitor.lastFailureAt)}
+            </p>
+          )}
+
+          {monitor.latestErrorMessage && (
+            <p className="monitor-summary-latest-error">
+              <strong>Failure reason:</strong> {monitor.latestErrorMessage}
+            </p>
+          )}
         </>
       )}
     </div>
