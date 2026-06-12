@@ -57,14 +57,22 @@ PulseOps does not include these yet:
 
 - Keep expanded chart layout stable while new chart data is loading.
 - Consider clamping chart tooltips near left and right chart edges.
+- Clean up chart time-window fallback so missing fetch timestamps do not use `0`.
 - Normalize failure reasons before showing raw backend error text.
 
 ### Backend Data
 
 - Consider a combined history endpoint that returns checks plus summary stats for a time window.
-- Consider backend aggregation or caching for the 7d chart before public deployment.
+- Add backend aggregation, caching, or rate limiting before exposing 7d chart fetches publicly.
 - Disable public create, delete, and manual check actions for the deployed read-only demo.
 - Seed the deployed demo with a curated monitor list.
+
+### Frontend Code Quality
+
+- Refactor `App.tsx` after MVP data flows settle.
+- Move API calls into a small API module.
+- Move dashboard and chart state into focused hooks.
+- Keep `App.tsx` mostly responsible for page layout and component wiring.
 
 ## Planning Timeline
 
