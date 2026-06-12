@@ -32,4 +32,6 @@ public interface CheckResultRepository extends JpaRepository<CheckResult, Long> 
     Optional<CheckResult> findTopByMonitorAndErrorMessageIsNotNullOrderByCheckedAtDesc(Monitor monitor);
 
     Optional<CheckResult> findTopByMonitorAndStatusOrderByCheckedAtDesc(Monitor monitor, String status);
+
+    void deleteByCheckedAtBefore(Instant checkedAt);
 }

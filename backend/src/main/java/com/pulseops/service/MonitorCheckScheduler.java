@@ -9,16 +9,19 @@ import org.springframework.stereotype.Component;
 public class MonitorCheckScheduler {
 
     private final MonitorService monitorService;
+    private final CheckResultRetentionService checkResultRetentionService;
     private static final Logger logger = LoggerFactory.getLogger(MonitorCheckScheduler.class);
 
-    public MonitorCheckScheduler(MonitorService monitorService) {
+    public MonitorCheckScheduler(MonitorService monitorService, CheckResultRetentionService checkResultRetentionService) {
         this.monitorService = monitorService;
+        this.checkResultRetentionService = checkResultRetentionService;
     }
     
     @Scheduled(cron = "${pulseops.monitor-check-cron:0 0/5 * * * *}")
     public void checkAllMonitors() {
         logger.info("Scheduled monitor checks starting");
         monitorService.checkAllMonitors();
+        checkResultRetentionService.deleteExpiredCheckResults();
         logger.info("Scheduled monitor checks completed");
     }
 }

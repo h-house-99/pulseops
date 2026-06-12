@@ -1,7 +1,10 @@
 package com.pulseops;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +21,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.pulseops.entity.CheckResult;
+import com.pulseops.entity.Monitor;
 import com.pulseops.model.EndpointCheckResult;
+import com.pulseops.repository.CheckResultRepository;
+import com.pulseops.repository.MonitorRepository;
+import com.pulseops.service.CheckResultRetentionService;
 import com.pulseops.service.EndpointCheckClient;
 import com.pulseops.service.MonitorService;
 
@@ -32,6 +40,15 @@ class MonitorApiIntegrationTest {
 
 	@Autowired
 	private MonitorService monitorService;
+
+	@Autowired
+	private MonitorRepository monitorRepository;
+
+	@Autowired
+	private CheckResultRepository checkResultRepository;
+
+	@Autowired
+	private CheckResultRetentionService checkResultRetentionService;
 
 	@Test
 	void getMonitorsInitiallyReturnsEmptyArray() throws Exception {
@@ -472,6 +489,20 @@ class MonitorApiIntegrationTest {
 	void deleteMonitorReturnsNotFoundForUnknownMonitor() throws Exception {
 		mockMvc.perform(delete("/api/monitors/1"))
 				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void checkResultRetentionServiceDeletesCheckResultsOlderThan30Days() throws Exception {
+		Monitor monitor = monitorRepository.save(new Monitor("HTTPBin", "https://httpbin.org/status/200", "UNKNOWN", Instant.now()));
+
+		CheckResult oldCheckResult = checkResultRepository.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now().minus(Duration.ofDays(31)), null));
+
+		CheckResult recentCheckResult = checkResultRepository.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now(), null));
+
+		checkResultRetentionService.deleteExpiredCheckResults();
+
+		assertThat(checkResultRepository.findById(oldCheckResult.getId())).isEmpty();
+		assertThat(checkResultRepository.findById(recentCheckResult.getId())).isPresent();
 	}
 
 	@TestConfiguration
