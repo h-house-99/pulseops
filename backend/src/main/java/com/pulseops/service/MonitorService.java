@@ -125,9 +125,9 @@ public class MonitorService {
         Instant startedAt = Instant.now();
         EndpointCheckResult endpointCheckResult = endpointCheckClient.checkEndpoint(monitor.getUrl());
         Instant checkedAt = Instant.now();
+        Long responseTimeMs = Duration.between(startedAt, checkedAt).toMillis();
         Integer statusCode = endpointCheckResult.statusCode();
         String errorMessage = endpointCheckResult.errorMessage();
-        Long responseTimeMs = Duration.between(startedAt, checkedAt).toMillis();
         String status = statusCode != null && statusCode >= 200 && statusCode < 400 ? "UP" : "DOWN";
 
         monitor.updateAfterCheck(status, statusCode, responseTimeMs, checkedAt);
