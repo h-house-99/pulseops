@@ -33,7 +33,7 @@ class FailureReasonMapperTest {
 
     @Test
     void mapsExpiredCertificateMessage() {
-        assertThat(failureReasonMapper.mapFailureReason(null, "(certificate_expired) PKIX path validation failed"))
+        assertThat(failureReasonMapper.mapFailureReason(null, "tls certificate expired"))
                 .isEqualTo("TLS certificate expired");
     }
 
@@ -47,6 +47,18 @@ class FailureReasonMapperTest {
     void mapsUnknownErrorToGenericFailure() {
         assertThat(failureReasonMapper.mapFailureReason(null, "HTTP/1.1 header parser received no bytes"))
                 .isEqualTo("Request failed");
+    }
+
+    @Test
+    void mapsConnectionClosedUnexpectedlyMessage() {
+        assertThat(failureReasonMapper.mapFailureReason(null, "Connection closed unexpectedly"))
+                .isEqualTo("Connection closed unexpectedly");
+    }
+
+    @Test
+    void mapsDnsResolutionFailedMessage() {
+        assertThat(failureReasonMapper.mapFailureReason(null, "DNS resolution failed"))
+                .isEqualTo("DNS resolution failed");
     }
 
 }

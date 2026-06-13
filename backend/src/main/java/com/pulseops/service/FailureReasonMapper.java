@@ -24,16 +24,20 @@ public class FailureReasonMapper {
             return "Connection refused";
         }
 
-        if (normalized.contains("dns lookup failed")) {
+        if (normalized.contains("dns resolution failed")) {
             return "DNS resolution failed";
         }
 
-        if (normalized.contains("certificate_expired")) {
+        if (normalized.contains("tls certificate expired")) {
             return "TLS certificate expired";
         }
 
         if (normalized.contains("request cancelled") || normalized.contains("request canceled")) {
             return "Request cancelled";
+        }
+
+        if (normalized.contains("connection closed unexpectedly")) {
+            return "Connection closed unexpectedly";
         }
 
         return "Request failed";
