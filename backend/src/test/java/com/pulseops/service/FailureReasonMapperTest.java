@@ -1,9 +1,7 @@
-package com.pulseops;
+package com.pulseops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
-
-import com.pulseops.service.FailureReasonMapper;
 
 class FailureReasonMapperTest {
 

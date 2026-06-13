@@ -3,6 +3,7 @@ package com.pulseops.service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +27,14 @@ public class MonitorService {
     private final EndpointCheckClient endpointCheckClient;
     private final MonitorRepository monitorRepository;
     private final CheckResultRepository checkResultRepository;
+    private final FailureReasonMapper failureReasonMapper;
     private static final Logger logger = LoggerFactory.getLogger(MonitorService.class);
 
-    public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository) {
+    public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository, FailureReasonMapper failureReasonMapper) {
         this.endpointCheckClient = endpointCheckClient;
         this.monitorRepository = monitorRepository;
         this.checkResultRepository = checkResultRepository;
+        this.failureReasonMapper = failureReasonMapper;
     }
 
     public MonitorResponse createMonitor(CreateMonitorRequest request) {
@@ -105,16 +108,22 @@ public class MonitorService {
         }
         Long averageResponseTimeMs = summaryStats.averageResponseTimeMs() != null ? Math.round(summaryStats.averageResponseTimeMs()) : null;
 
-        String lastErrorMessage = checkResultRepository.findTopByMonitorAndErrorMessageIsNotNullOrderByCheckedAtDesc(monitor)
+        String lastNonNullErrorMessage = checkResultRepository.findTopByMonitorAndErrorMessageIsNotNullOrderByCheckedAtDesc(monitor)
                 .map(CheckResult::getErrorMessage)
                 .orElse(null);
 
-        Instant lastFailureAt = checkResultRepository.findTopByMonitorAndStatusOrderByCheckedAtDesc(monitor, "DOWN")
-                .map(CheckResult::getCheckedAt)
+        Optional<CheckResult> latestFailureCheck = checkResultRepository.findTopByMonitorAndStatusOrderByCheckedAtDesc(monitor, "DOWN");
+
+        String lastFailureReason = latestFailureCheck
+                .map(checkResult -> failureReasonMapper.mapFailureReason(checkResult.getStatusCode(), checkResult.getErrorMessage()))
+                .orElse(null);
+
+        Instant lastFailureAt = latestFailureCheck
+                .map(checkResult -> checkResult.getCheckedAt())
                 .orElse(null);
 
 
-        return new MonitorResponse(monitor.getId(), monitor.getName(), monitor.getUrl(), monitor.getStatus(), monitor.getLastStatusCode(), monitor.getLastResponseTimeMs(), monitor.getLastCheckedAt(), summaryStats.totalChecks(), uptimePercentage, averageResponseTimeMs, summaryStats.fastestResponseTimeMs(), summaryStats.slowestResponseTimeMs(), lastErrorMessage, lastFailureAt);
+        return new MonitorResponse(monitor.getId(), monitor.getName(), monitor.getUrl(), monitor.getStatus(), monitor.getLastStatusCode(), monitor.getLastResponseTimeMs(), monitor.getLastCheckedAt(), summaryStats.totalChecks(), uptimePercentage, averageResponseTimeMs, summaryStats.fastestResponseTimeMs(), summaryStats.slowestResponseTimeMs(), lastNonNullErrorMessage, lastFailureReason, lastFailureAt);
     }
 
     private CheckResultResponse toCheckResultResponse(CheckResult checkResult, long monitorId) {

@@ -15,7 +15,7 @@ public class FailureReasonMapper {
 
         String normalized = errorMessage.toLowerCase();
 
-        if (normalized.contains("timeout")) {
+        if (normalized.contains("timeout") || normalized.contains("timed out")) {
             return "Request timed out";
         }
 
