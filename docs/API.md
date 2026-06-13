@@ -36,7 +36,8 @@ All monitor-returning endpoints use this shape.
   "averageResponseTimeMs": 184,
   "fastestResponseTimeMs": 91,
   "slowestResponseTimeMs": 721,
-  "latestErrorMessage": "Request timed out",
+  "latestErrorMessage": "I/O error on GET request for https://api.github.com: Request cancelled",
+  "latestFailureReason": "Request cancelled",
   "lastFailureAt": "2026-05-17T18:32:00Z"
 }
 ```
@@ -52,6 +53,7 @@ Notes:
 - `averageResponseTimeMs`, `fastestResponseTimeMs`, and `slowestResponseTimeMs` are calculated from stored check results.
 - Summary latency fields are `null` when no checks exist.
 - `latestErrorMessage` is the most recent non-null request error message, or `null`.
+- `latestFailureReason` is the most recent `DOWN` check reason in simple language, or `null`.
 - `lastFailureAt` is the most recent `DOWN` check time, or `null`.
 
 ### Check Result
@@ -258,3 +260,4 @@ Successful responses return `204 No Content`.
 Errors:
 
 - If the monitor does not exist, the backend returns `404`.
+

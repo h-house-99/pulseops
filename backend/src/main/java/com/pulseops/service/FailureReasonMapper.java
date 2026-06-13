@@ -1,9 +1,9 @@
 package com.pulseops.service;
 
 import org.springframework.stereotype.Component;
-
 @Component
 public class FailureReasonMapper {
+
     public String mapFailureReason(Integer statusCode, String errorMessage) {
         if (statusCode != null && (statusCode < 200 || statusCode >= 400)) {
             return "HTTP " + statusCode;
@@ -15,6 +15,7 @@ public class FailureReasonMapper {
 
         String normalized = errorMessage.toLowerCase();
 
+
         if (normalized.contains("timeout") || normalized.contains("timed out")) {
             return "Request timed out";
         }
@@ -23,7 +24,7 @@ public class FailureReasonMapper {
             return "Connection refused";
         }
 
-        if (normalized.contains("dns")) {
+        if (normalized.contains("dns lookup failed")) {
             return "DNS resolution failed";
         }
 

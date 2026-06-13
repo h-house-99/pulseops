@@ -106,14 +106,6 @@ function MonitorCard({
         </div>
       </div>
 
-      {monitor.status === 'DOWN' && monitor.latestErrorMessage && (
-        <>
-          <p className="monitor-summary-latest-error">
-            <strong>Error:</strong> {monitor.latestErrorMessage}
-          </p>
-        </>
-      )}
-
       {isExpanded && (
         <>
 
@@ -150,9 +142,9 @@ function MonitorCard({
             </p>
           )}
 
-          {monitor.latestErrorMessage && (
+          {monitor.latestFailureReason && (
             <p className="monitor-summary-latest-error">
-              <strong>Failure reason:</strong> {monitor.latestErrorMessage}
+              <strong>Failure reason:</strong> {monitor.latestFailureReason}
             </p>
           )}
         </>
