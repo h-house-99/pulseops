@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import MonitorForm from './components/MonitorForm'
 import MonitorCard from './components/MonitorCard'
 import type { Monitor, CheckResult } from './types'
+import { canManageMonitors } from './config'
 type ChartCacheKey = `${number}-${number}`
 
 const BASE_URL = 'http://localhost:8080/api'
@@ -271,28 +272,33 @@ function App() {
   return (
     <main className="app-shell">
       <div className="app-header">
-        <p className="eyebrow">PulseOps</p>
+        <div className="app-header-top">
+          <p className="eyebrow">PulseOps</p>
+          <span className={`role-tag ${canManageMonitors ? 'role-tag-admin' : 'role-tag-viewer'}`}>
+            {canManageMonitors ? 'Admin' : 'Viewer'}
+          </span>
+        </div>
         <h1>Monitor API health in real time</h1>
         <p className="intro">
-          Latency, uptime, and check history for the endpoints you care about.
+          Live health for curated public APIs.
         </p>
       </div>
       <section className="monitor-section">
         <h2>Monitors</h2>
 
-        <MonitorForm
+        {canManageMonitors && <MonitorForm
           name={newMonitorName}
           url={newMonitorUrl}
           onNameChange={setNewMonitorName}
           onUrlChange={setNewMonitorUrl}
           onSubmit={handleCreateMonitor}
-        />
+        />}
 
         {isLoading && <p>Loading monitors...</p>}
 
         {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-        {!isLoading && !errorMessage && monitors.length === 0 && (
+        {canManageMonitors && !isLoading && !errorMessage && monitors.length === 0 && (
           <p>No monitors yet. Add one above.</p>
         )}
 
