@@ -44,8 +44,8 @@
 }
 
 .monitor-section {
-  margin-top: 48px;
-  padding-top: 32px;
+  margin-top: 24px;
+  padding-top: 24px;
   border-top: 1px solid #3c3d3d;
 }
 
@@ -67,6 +67,7 @@
 .monitor-card-main {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 24px;
 }
 

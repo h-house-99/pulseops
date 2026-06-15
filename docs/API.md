@@ -237,6 +237,7 @@ Allowed `hours` values:
 - `1`
 - `8`
 - `24`
+- `168` (7 days)
 
 Results are ordered by `checkedAt` ascending, oldest to newest.
 

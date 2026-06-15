@@ -14,10 +14,14 @@ PulseOps currently supports:
 - see total checks and uptime percentage
 - see average, fastest, and slowest response times
 - see the latest request error and last failure time
+- see mapped failure reasons in plain language (for example, `Request timed out`, `HTTP 500`)
 - view latency charts for the last 1, 8, 24 hours, or 7 days
 - show an hourly aggregated chart for the 7d window
 - inspect chart points for exact latency, status, status code, and checked time
 - see chart-window summary stats in expanded monitor cards
+- cache chart history per monitor and time window in the frontend, with a 1-hour TTL for 7d data
+- keep shorter chart windows live on dashboard refresh while avoiding redundant 7d refetches
+- use a polished dashboard layout with clearer header copy, card spacing, and a wider shell on large screens
 - delete a monitor and its check history
 - clean up check results older than 30 days
 
@@ -40,32 +44,32 @@ PulseOps does not include these yet:
 
 ## Recommended Next
 
-1. Smooth chart loading states and tooltip edge behavior.
-2. Normalize failure reasons before showing raw backend error text.
-3. Prepare the public demo as read-only with curated monitors.
+1. Prepare the public demo as read-only with curated monitors.
+2. Clamp chart tooltips near left and right chart edges.
+3. Update the dashboard screenshot in `docs/assets/` to match the current UI.
 
 ## Near-Term TODO
 
-### Dashboard Layout
+### Read-Only MVP
 
-- Center monitor cards and forms within the main app shell.
-- Let monitor cards and charts use more width on larger screens.
-- Recheck mobile chart spacing after desktop layout changes.
-- Prioritize UI polish before deployment prep.
+- Disable public create, delete, and manual check actions for the deployed read-only demo.
+- Seed the deployed demo with a curated monitor list.
+- Add environment-based frontend controls for read-only mode.
 
 ### Chart And Analytics
 
-- Keep expanded chart layout stable while new chart data is loading.
 - Consider clamping chart tooltips near left and right chart edges.
 - Clean up chart time-window fallback so missing fetch timestamps do not use `0`.
-- Normalize failure reasons before showing raw backend error text.
 
 ### Backend Data
 
 - Consider a combined history endpoint that returns checks plus summary stats for a time window.
-- Add backend aggregation, caching, or rate limiting before exposing 7d chart fetches publicly.
-- Disable public create, delete, and manual check actions for the deployed read-only demo.
-- Seed the deployed demo with a curated monitor list.
+- Add backend aggregation or rate limiting before exposing 7d chart fetches publicly.
+
+### Dashboard Polish
+
+- Recheck mobile chart spacing after desktop layout changes.
+- Update `docs/assets/pulseops-dashboard.jpg` after the next visible UI pass.
 
 ### Frontend Code Quality
 
@@ -80,7 +84,7 @@ These dates are rough targets for keeping the MVP focused.
 
 | Target date | Work | Estimate |
 | --- | --- | --- |
-| June 10-14, 2026 | Finish 7d chart support, retention cleanup, chart point details, docs, and UI polish | 1-2 sessions |
+| June 10-14, 2026 | Finish 7d chart support, retention cleanup, failure reasons, chart caching, and dashboard layout polish | Done |
 | June 15-21, 2026 | Add read-only MVP controls and final dashboard polish | 2-3 sessions |
 | June 22-30, 2026 | Prepare read-only deployment config, curated monitors, environment variables, and production database setup | 2-4 sessions |
 | July 1-7, 2026 | Deploy MVP, smoke test real monitors, and fix deployment issues | 2-3 sessions |
