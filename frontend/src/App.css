@@ -1,7 +1,37 @@
 .app-shell {
   width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 72px 0;
+  padding: 48px 0 72px;
+}
+
+.app-header {
+  max-width: 720px;
+}
+.app-header h1 {
+  font-size: 32px;
+  color: #f3f4f6;
+  margin: 0 0 12px;
+}
+.intro {
+  max-width: 560px;
+  font-size: 16px;
+  margin: 0;
+  color: #8c92a0;
+  line-height: 1.6;
+}
+.monitor-section h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7a8293;
+}
+
+@media (min-width: 1280px) {
+  .app-shell {
+    width: min(1280px, calc(100% - 48px));
+  }
 }
 
 .eyebrow {
@@ -13,21 +43,16 @@
   text-transform: uppercase;
 }
 
-.intro {
-  max-width: 640px;
-  margin: 0;
-  color: #8c92a0;
-  font-size: 18px;
-  line-height: 1.6;
-}
-
 .monitor-section {
   margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid #3c3d3d;
 }
 
-.monitor-section h2 {
-  margin: 0 0 16px;
-  font-size: 24px;
+.monitor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .monitor-card {
@@ -45,7 +70,6 @@
   gap: 24px;
 }
 
-
 .monitor-card h3 {
   margin: 0 0 6px;
   font-size: 18px;
@@ -60,7 +84,7 @@
 .monitor-summary {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
   margin-top: 8px;
   color: #9d9fa1;

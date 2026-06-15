@@ -270,11 +270,13 @@ function App() {
 
   return (
     <main className="app-shell">
-      <p className="eyebrow">PulseOps</p>
-      <h1>API monitoring dashboard</h1>
-      <p className="intro">
-        Track API health, latency, and check results from one focused dashboard.
-      </p>
+      <div className="app-header">
+        <p className="eyebrow">PulseOps</p>
+        <h1>Monitor API health in real time</h1>
+        <p className="intro">
+          Latency, uptime, and check history for the endpoints you care about.
+        </p>
+      </div>
       <section className="monitor-section">
         <h2>Monitors</h2>
 
@@ -294,34 +296,36 @@ function App() {
           <p>No monitors yet. Add one above.</p>
         )}
 
-        {monitors.map((monitor) => {
-          const isExpanded = expandedMonitorIds.includes(monitor.id)
-          const chartErrorMessage = chartErrorByMonitorId[monitor.id] ?? null
-          const chartKey = getChartCacheKey(monitor.id, chartWindowHours)
-          const hasChartData = chartKey in cachedChartChecksByKey
-          const chartChecks = hasChartData ? cachedChartChecksByKey[chartKey] ?? [] : []
-          const chartFetchedAt = cachedChartFetchedAtByKey[chartKey]
-            ?? (chartChecks.at(-1) ? new Date(chartChecks.at(-1)!.checkedAt).getTime() : Date.now())
-          const isChartDataPending = isExpanded && !hasChartData && !chartErrorMessage
+        <div className="monitor-list">
+          {monitors.map((monitor) => {
+            const isExpanded = expandedMonitorIds.includes(monitor.id)
+            const chartErrorMessage = chartErrorByMonitorId[monitor.id] ?? null
+            const chartKey = getChartCacheKey(monitor.id, chartWindowHours)
+            const hasChartData = chartKey in cachedChartChecksByKey
+            const chartChecks = hasChartData ? cachedChartChecksByKey[chartKey] ?? [] : []
+            const chartFetchedAt = cachedChartFetchedAtByKey[chartKey]
+              ?? (chartChecks.at(-1) ? new Date(chartChecks.at(-1)!.checkedAt).getTime() : Date.now())
+            const isChartDataPending = isExpanded && !hasChartData && !chartErrorMessage
 
-          return (
-            <MonitorCard
-              key={monitor.id}
-              monitor={monitor}
-              onCheckNow={handleCheckNow}
-              isExpanded={isExpanded}
-              isChecking={checkingMonitorIds.includes(monitor.id)}
-              chartChecks={chartChecks}
-              isChartLoading={loadingChartMonitorIds.includes(monitor.id) || isChartDataPending}
-              chartErrorMessage={chartErrorMessage}
-              chartWindowHours={chartWindowHours}
-              onChartWindowHoursChange={setChartWindowHours}
-              chartFetchedAt={chartFetchedAt}
-              onToggleCheckHistory={() => handleToggleCheckHistory(monitor.id)}
-              onDeleteMonitor={() => handleDeleteMonitor(monitor.id)}
-            />
-          )
-        })}
+            return (
+              <MonitorCard
+                key={monitor.id}
+                monitor={monitor}
+                onCheckNow={handleCheckNow}
+                isExpanded={isExpanded}
+                isChecking={checkingMonitorIds.includes(monitor.id)}
+                chartChecks={chartChecks}
+                isChartLoading={loadingChartMonitorIds.includes(monitor.id) || isChartDataPending}
+                chartErrorMessage={chartErrorMessage}
+                chartWindowHours={chartWindowHours}
+                onChartWindowHoursChange={setChartWindowHours}
+                chartFetchedAt={chartFetchedAt}
+                onToggleCheckHistory={() => handleToggleCheckHistory(monitor.id)}
+                onDeleteMonitor={() => handleDeleteMonitor(monitor.id)}
+              />
+            )
+          })}
+        </div>
 
       </section>
 
