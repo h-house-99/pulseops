@@ -43,6 +43,24 @@ PostgreSQL stores monitored endpoints and historical check results. Tests use H2
 4. Shorter windows (`1`, `8`, `24`) are refreshed on dashboard poll so expanded charts stay live.
 5. The `7d` window (`hours=168`) uses a 1-hour frontend TTL so repeated window toggles and polls do not refetch large history payloads unnecessarily.
 
+## Read-Only Demo Mode
+
+PulseOps uses two environment flags for the public demo:
+
+| Layer | Flag | Purpose |
+| --- | --- | --- |
+| Frontend | `VITE_CAN_MANAGE_MONITORS` | Hides create, check, and delete UI actions |
+| Backend | `PULSEOPS_READ_ONLY_MODE` | Blocks write API calls with `403 Forbidden` |
+
+Read-only enforcement lives in `MonitorService`. User-triggered write methods call `ensureMonitorManagementAllowed()` before creating monitors, running manual checks, or deleting monitors.
+
+When read-only mode is enabled:
+
+- `POST /api/monitors`, `POST /api/monitors/{id}/check-now`, and `DELETE /api/monitors/{id}` are rejected.
+- `GET /api/monitors`, chart history endpoints, health checks, and scheduled background checks continue to work.
+
+Local development usually keeps backend read-only off and frontend management UI on. The deployed demo should set `PULSEOPS_READ_ONLY_MODE=true` and `VITE_CAN_MANAGE_MONITORS=false`.
+
 ## Data Model
 
 ### Monitor

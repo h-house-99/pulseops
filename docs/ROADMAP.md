@@ -24,6 +24,8 @@ PulseOps currently supports:
 - use a polished dashboard layout with clearer header copy, card spacing, and a wider shell on large screens
 - delete a monitor and its check history
 - clean up check results older than 30 days
+- gate create, check, and delete UI actions behind `VITE_CAN_MANAGE_MONITORS`
+- block backend create, manual check, and delete endpoints in read-only mode with `PULSEOPS_READ_ONLY_MODE`
 
 The backend also includes a curated public API list endpoint. A frontend discovery flow can be added later.
 
@@ -44,7 +46,7 @@ PulseOps does not include these yet:
 
 ## Recommended Next
 
-1. Prepare the public demo as read-only with curated monitors.
+1. Seed the deployed demo with a curated monitor list.
 2. Clamp chart tooltips near left and right chart edges.
 3. Update the dashboard screenshot in `docs/assets/` to match the current UI.
 
@@ -52,9 +54,8 @@ PulseOps does not include these yet:
 
 ### Read-Only MVP
 
-- Disable public create, delete, and manual check actions for the deployed read-only demo.
 - Seed the deployed demo with a curated monitor list.
-- Add environment-based frontend controls for read-only mode.
+- Add `VITE_API_BASE_URL` for deployed frontend builds.
 
 ### Chart And Analytics
 

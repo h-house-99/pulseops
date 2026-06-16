@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.pulseops.config.ReadOnlyModeConfig;
 import com.pulseops.entity.CheckResult;
 import com.pulseops.entity.Monitor;
 import com.pulseops.model.CheckResultResponse;
@@ -29,15 +30,18 @@ public class MonitorService {
     private final CheckResultRepository checkResultRepository;
     private final FailureReasonMapper failureReasonMapper;
     private static final Logger logger = LoggerFactory.getLogger(MonitorService.class);
+    private final ReadOnlyModeConfig readOnlyModeConfig;
 
-    public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository, FailureReasonMapper failureReasonMapper) {
+    public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository, FailureReasonMapper failureReasonMapper, ReadOnlyModeConfig readOnlyModeConfig) {
         this.endpointCheckClient = endpointCheckClient;
         this.monitorRepository = monitorRepository;
         this.checkResultRepository = checkResultRepository;
         this.failureReasonMapper = failureReasonMapper;
+        this.readOnlyModeConfig = readOnlyModeConfig;
     }
 
     public MonitorResponse createMonitor(CreateMonitorRequest request) {
+        ensureMonitorManagementAllowed();
         Monitor monitor = new Monitor(request.name(), request.url(), "UNKNOWN", Instant.now());
         monitorRepository.save(monitor);
         return toResponse(monitor);
@@ -51,6 +55,7 @@ public class MonitorService {
     }
 
     public CheckResultResponse checkMonitorNow(long id) {
+        ensureMonitorManagementAllowed();
         Monitor monitor = monitorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
 
@@ -94,6 +99,7 @@ public class MonitorService {
     }
 
     public void deleteMonitor(long monitorId) {
+        ensureMonitorManagementAllowed();
         Monitor monitor = monitorRepository.findById(monitorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monitor not found"));
         monitorRepository.delete(monitor);
@@ -144,5 +150,11 @@ public class MonitorService {
         CheckResult checkResult = new CheckResult(monitor, status, statusCode, responseTimeMs, checkedAt, errorMessage);
         checkResultRepository.save(checkResult);
         return checkResult;
+    }
+
+    private void ensureMonitorManagementAllowed() {
+        if (readOnlyModeConfig.isReadOnlyMode()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Monitor management is not allowed in read-only mode");
+        }
     }
 }
