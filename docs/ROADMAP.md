@@ -26,8 +26,10 @@ PulseOps currently supports:
 - clean up check results older than 30 days
 - gate create, check, and delete UI actions behind `VITE_CAN_MANAGE_MONITORS`
 - block backend create, manual check, and delete endpoints in read-only mode with `PULSEOPS_READ_ONLY_MODE`
+- seed a curated monitor list on startup when `PULSEOPS_SEED_CURATED_MONITORS=true` and the database is empty
+- serve the same curated catalog from `GET /api/public-apis`
 
-The backend also includes a curated public API list endpoint. A frontend discovery flow can be added later.
+A frontend discovery flow can be added later.
 
 ## MVP Direction
 
@@ -46,16 +48,16 @@ PulseOps does not include these yet:
 
 ## Recommended Next
 
-1. Seed the deployed demo with a curated monitor list.
+1. Add `VITE_API_BASE_URL` and production CORS configuration for deployment.
 2. Clamp chart tooltips near left and right chart edges.
 3. Update the dashboard screenshot in `docs/assets/` to match the current UI.
 
 ## Near-Term TODO
 
-### Read-Only MVP
+### Deployment
 
-- Seed the deployed demo with a curated monitor list.
 - Add `VITE_API_BASE_URL` for deployed frontend builds.
+- Allow the deployed frontend origin in backend CORS configuration.
 
 ### Chart And Analytics
 

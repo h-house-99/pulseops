@@ -29,6 +29,7 @@ export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pulseops
 export SPRING_DATASOURCE_USERNAME=your_postgres_username
 export SPRING_DATASOURCE_PASSWORD=your_postgres_password
 export PULSEOPS_READ_ONLY_MODE=false
+export PULSEOPS_SEED_CURATED_MONITORS=false
 ```
 
 `PULSEOPS_READ_ONLY_MODE` controls backend write access:
@@ -36,7 +37,17 @@ export PULSEOPS_READ_ONLY_MODE=false
 - `false` (default): create, manual check, and delete endpoints are allowed.
 - `true`: those write endpoints return `403`, but `GET` endpoints and scheduled checks still work.
 
-For the public demo, set `PULSEOPS_READ_ONLY_MODE=true`.
+`PULSEOPS_SEED_CURATED_MONITORS` controls startup seeding:
+
+- `false` (default): no monitors are inserted automatically.
+- `true`: inserts the curated monitor list when the database has no monitors yet.
+
+For the public demo on a fresh database, typical values are:
+
+```bash
+export PULSEOPS_SEED_CURATED_MONITORS=true
+export PULSEOPS_READ_ONLY_MODE=true
+```
 
 Spring Boot creates or updates the `monitors` and `check_results` tables on startup using Hibernate.
 
@@ -78,6 +89,7 @@ Run backend commands from `backend/`.
 | Package JAR | `./mvnw package` |
 | Run one test class | `./mvnw test -Dtest=MonitorApiIntegrationTest` |
 | Run read-only tests | `./mvnw test -Dtest=MonitorApiReadOnlyIntegrationTest` |
+| Run seeding tests | `./mvnw test -Dtest=MonitorApiSeedCuratedMonitorIntegrationTest` |
 
 The API runs at `http://localhost:8080` by default.
 

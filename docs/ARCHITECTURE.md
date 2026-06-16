@@ -61,6 +61,29 @@ When read-only mode is enabled:
 
 Local development usually keeps backend read-only off and frontend management UI on. The deployed demo should set `PULSEOPS_READ_ONLY_MODE=true` and `VITE_CAN_MANAGE_MONITORS=false`.
 
+## Curated Monitor Catalog And Seeding
+
+PulseOps keeps one curated API list in `CuratedMonitorDefinition`. That list is reused in two places:
+
+| Consumer | Purpose |
+| --- | --- |
+| `MonitorDataSeeder` | Inserts monitors into PostgreSQL when `PULSEOPS_SEED_CURATED_MONITORS=true` and the database is empty |
+| `PublicApiService` | Returns the same catalog from `GET /api/public-apis` |
+
+Seeding flow:
+
+1. Spring Boot starts and the application context is ready.
+2. `MonitorDataSeeder` runs as an `ApplicationRunner`.
+3. If seeding is disabled, it exits immediately.
+4. If monitors already exist, it exits without inserting duplicates.
+5. Otherwise it inserts the curated monitors with `status = "UNKNOWN"`.
+6. `MonitorCheckScheduler` checks them on the normal 5-minute schedule.
+
+Demo deployment flags are managed together in `PulseOpsConfig`:
+
+- `PULSEOPS_READ_ONLY_MODE`
+- `PULSEOPS_SEED_CURATED_MONITORS`
+
 ## Data Model
 
 ### Monitor
@@ -116,15 +139,13 @@ Fields:
 
 ### PublicApi
 
-Represents a curated API option returned by the backend. These records are currently static backend responses and can later power a frontend discovery flow.
+Represents a curated API option returned by `GET /api/public-apis`. These records are mapped from `CuratedMonitorDefinition` and can later power a frontend discovery flow.
 
 Fields:
 
 - `id`
 - `name`
-- `description`
 - `url`
-- `category`
 
 ## Relationships
 
