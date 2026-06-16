@@ -11,7 +11,7 @@ React + Vite frontend
     -> External API endpoints
 ```
 
-The frontend manages the monitor dashboard, user input, loading states, monitor summary statistics, error details, latency charts, chart point details, and periodic dashboard refreshes.
+The frontend manages the monitor dashboard, user input, loading states, monitor summary statistics, mapped failure reasons, latency charts, chart point details, per-window chart caching, and periodic dashboard refreshes.
 
 The backend owns monitor validation, persistence, endpoint health checks, scheduled background checks, summary-stat calculation, and API response shaping.
 
@@ -34,6 +34,32 @@ PostgreSQL stores monitored endpoints and historical check results. Tests use H2
 3. The scheduler asks `MonitorService` to check all stored monitors.
 4. Each result updates the monitor's latest status and creates a `CheckResult` history row.
 5. The React dashboard polls the monitor list every 60 seconds, so newly scheduled results appear without a manual refresh.
+
+## Dashboard Refresh And Chart Caching
+
+1. The frontend polls `GET /api/monitors` every 60 seconds to refresh live monitor status and summary fields.
+2. When a monitor card is expanded, the frontend fetches chart history with `GET /api/monitors/{id}/checks?hours=...`.
+3. Chart results are cached in memory using a composite key of `monitorId` plus `windowHours`.
+4. Shorter windows (`1`, `8`, `24`) are refreshed on dashboard poll so expanded charts stay live.
+5. The `7d` window (`hours=168`) uses a 1-hour frontend TTL so repeated window toggles and polls do not refetch large history payloads unnecessarily.
+
+## Read-Only Demo Mode
+
+PulseOps uses two environment flags for the public demo:
+
+| Layer | Flag | Purpose |
+| --- | --- | --- |
+| Frontend | `VITE_CAN_MANAGE_MONITORS` | Hides create, check, and delete UI actions |
+| Backend | `PULSEOPS_READ_ONLY_MODE` | Blocks write API calls with `403 Forbidden` |
+
+Read-only enforcement lives in `MonitorService`. User-triggered write methods call `ensureMonitorManagementAllowed()` before creating monitors, running manual checks, or deleting monitors.
+
+When read-only mode is enabled:
+
+- `POST /api/monitors`, `POST /api/monitors/{id}/check-now`, and `DELETE /api/monitors/{id}` are rejected.
+- `GET /api/monitors`, chart history endpoints, health checks, and scheduled background checks continue to work.
+
+Local development usually keeps backend read-only off and frontend management UI on. The deployed demo should set `PULSEOPS_READ_ONLY_MODE=true` and `VITE_CAN_MANAGE_MONITORS=false`.
 
 ## Data Model
 
@@ -60,6 +86,7 @@ Computed response fields:
 - `fastestResponseTimeMs`
 - `slowestResponseTimeMs`
 - `latestErrorMessage`
+- `latestFailureReason`
 - `lastFailureAt`
 
 Status values currently used:

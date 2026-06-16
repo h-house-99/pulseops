@@ -67,6 +67,10 @@ function MonitorLatencyChart({ checks, timeWindowHours, chartFetchedAt, isLoadin
         return (
             <div className="monitor-latency-chart">
                 <div className="monitor-latency-chart-state">Loading chart...</div>
+                <div className="monitor-latency-chart-axis">
+                    <span>{timeWindowHours === 168 ? '7d ago' : `${timeWindowHours}h ago`}</span>
+                    <span>Now</span>
+                </div>
             </div>
         )
     }

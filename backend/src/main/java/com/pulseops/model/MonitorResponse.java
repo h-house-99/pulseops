@@ -16,6 +16,7 @@ public record MonitorResponse(
         Long fastestResponseTimeMs,
         Long slowestResponseTimeMs,
         String latestErrorMessage,
+        String latestFailureReason,
         Instant lastFailureAt) {
 
 }

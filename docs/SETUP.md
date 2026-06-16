@@ -28,7 +28,15 @@ Example environment values:
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pulseops
 export SPRING_DATASOURCE_USERNAME=your_postgres_username
 export SPRING_DATASOURCE_PASSWORD=your_postgres_password
+export PULSEOPS_READ_ONLY_MODE=false
 ```
+
+`PULSEOPS_READ_ONLY_MODE` controls backend write access:
+
+- `false` (default): create, manual check, and delete endpoints are allowed.
+- `true`: those write endpoints return `403`, but `GET` endpoints and scheduled checks still work.
+
+For the public demo, set `PULSEOPS_READ_ONLY_MODE=true`.
 
 Spring Boot creates or updates the `monitors` and `check_results` tables on startup using Hibernate.
 
@@ -69,6 +77,7 @@ Run backend commands from `backend/`.
 | Compile | `./mvnw compile` |
 | Package JAR | `./mvnw package` |
 | Run one test class | `./mvnw test -Dtest=MonitorApiIntegrationTest` |
+| Run read-only tests | `./mvnw test -Dtest=MonitorApiReadOnlyIntegrationTest` |
 
 The API runs at `http://localhost:8080` by default.
 
@@ -89,6 +98,25 @@ Run frontend commands from `frontend/`.
 | Preview production build | `npm run preview` |
 
 The frontend runs at `http://localhost:5173` by default and calls the backend at `http://localhost:8080/api`.
+
+Copy the frontend example environment file for local UI mode:
+
+```bash
+cp frontend/.env.example frontend/.env.local
+```
+
+Example frontend values:
+
+```bash
+VITE_CAN_MANAGE_MONITORS=true
+```
+
+`VITE_CAN_MANAGE_MONITORS` controls whether the dashboard shows create, check, and delete controls:
+
+- `true`: show Admin controls for local development.
+- `false`: show Viewer mode for the public demo UI.
+
+This flag only affects the UI. Backend write protection still depends on `PULSEOPS_READ_ONLY_MODE`.
 
 ## Full Stack Startup
 

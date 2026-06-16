@@ -8,6 +8,36 @@ Base URL during local development:
 http://localhost:8080
 ```
 
+## Read-Only Mode
+
+PulseOps supports a backend read-only mode for the public demo. When enabled, user-triggered monitor management is blocked while read endpoints and scheduled checks keep working.
+
+Configuration:
+
+```properties
+pulseops.read-only-mode=${PULSEOPS_READ_ONLY_MODE:false}
+```
+
+Set `PULSEOPS_READ_ONLY_MODE=true` in production or demo environments.
+
+When read-only mode is enabled:
+
+- `GET` endpoints continue to work normally.
+- Scheduled background checks continue to run every 5 minutes.
+- `POST /api/monitors`, `POST /api/monitors/{id}/check-now`, and `DELETE /api/monitors/{id}` return `403 Forbidden`.
+
+Example `403` response body:
+
+```json
+{
+  "status": 403,
+  "error": "Forbidden",
+  "message": "Monitor management is not allowed in read-only mode"
+}
+```
+
+The frontend uses a separate UI flag, `VITE_CAN_MANAGE_MONITORS`, to hide create, check, and delete controls. Backend read-only mode is the real enforcement layer.
+
 ## Status Rules
 
 Monitor checks use these rules:
@@ -36,7 +66,8 @@ All monitor-returning endpoints use this shape.
   "averageResponseTimeMs": 184,
   "fastestResponseTimeMs": 91,
   "slowestResponseTimeMs": 721,
-  "latestErrorMessage": "Request timed out",
+  "latestErrorMessage": "I/O error on GET request for https://api.github.com: Request cancelled",
+  "latestFailureReason": "Request cancelled",
   "lastFailureAt": "2026-05-17T18:32:00Z"
 }
 ```
@@ -52,6 +83,7 @@ Notes:
 - `averageResponseTimeMs`, `fastestResponseTimeMs`, and `slowestResponseTimeMs` are calculated from stored check results.
 - Summary latency fields are `null` when no checks exist.
 - `latestErrorMessage` is the most recent non-null request error message, or `null`.
+- `latestFailureReason` is the most recent `DOWN` check reason in simple language, or `null`.
 - `lastFailureAt` is the most recent `DOWN` check time, or `null`.
 
 ### Check Result
@@ -133,7 +165,10 @@ Example request:
 
 Returns a `Monitor` response.
 
-If the request is invalid, the backend returns `400`.
+Errors:
+
+- If the request is invalid, the backend returns `400`.
+- If read-only mode is enabled, the backend returns `403`.
 
 ## List Monitors
 
@@ -199,6 +234,7 @@ Example `DOWN` result from a request failure:
 
 Errors:
 
+- If read-only mode is enabled, the backend returns `403`.
 - If the monitor does not exist, the backend returns `404`.
 
 ## Scheduled Checks
@@ -235,6 +271,7 @@ Allowed `hours` values:
 - `1`
 - `8`
 - `24`
+- `168` (7 days)
 
 Results are ordered by `checkedAt` ascending, oldest to newest.
 
@@ -257,4 +294,6 @@ Successful responses return `204 No Content`.
 
 Errors:
 
+- If read-only mode is enabled, the backend returns `403`.
 - If the monitor does not exist, the backend returns `404`.
+

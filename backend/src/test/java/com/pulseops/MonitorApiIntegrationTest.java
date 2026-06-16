@@ -82,9 +82,9 @@ class MonitorApiIntegrationTest {
 				.andExpect(status().isOk());
 
 		mockMvc.perform(post("/api/monitors")
-			.contentType(MediaType.APPLICATION_JSON)
-			.content("{\"name\":\"API Docs 2\",\"url\":\"https://example.com/status/500\"}"))
-			.andExpect(status().isOk());
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"name\":\"API Docs 2\",\"url\":\"https://example.com/status/500\"}"))
+				.andExpect(status().isOk());
 
 		monitorService.checkAllMonitors();
 
@@ -344,7 +344,7 @@ class MonitorApiIntegrationTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
 				.andExpect(status().isOk());
-				
+
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
@@ -392,8 +392,8 @@ class MonitorApiIntegrationTest {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/200\"}"))
-				.andExpect(status().isOk());			
-				
+				.andExpect(status().isOk());
+
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
@@ -414,8 +414,8 @@ class MonitorApiIntegrationTest {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/timeout\"}"))
-				.andExpect(status().isOk());				
-				
+				.andExpect(status().isOk());
+
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
@@ -431,8 +431,8 @@ class MonitorApiIntegrationTest {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/status/500\"}"))
-				.andExpect(status().isOk());				
-				
+				.andExpect(status().isOk());
+
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
@@ -448,8 +448,8 @@ class MonitorApiIntegrationTest {
 		mockMvc.perform(post("/api/monitors")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"HTTPBin\",\"url\":\"https://httpbin.org/flaky\"}"))
-				.andExpect(status().isOk());			
-		
+				.andExpect(status().isOk());
+
 		mockMvc.perform(post("/api/monitors/1/check-now"))
 				.andExpect(status().isOk());
 
@@ -493,11 +493,14 @@ class MonitorApiIntegrationTest {
 
 	@Test
 	void checkResultRetentionServiceDeletesCheckResultsOlderThan30Days() throws Exception {
-		Monitor monitor = monitorRepository.save(new Monitor("HTTPBin", "https://httpbin.org/status/200", "UNKNOWN", Instant.now()));
+		Monitor monitor = monitorRepository
+				.save(new Monitor("HTTPBin", "https://httpbin.org/status/200", "UNKNOWN", Instant.now()));
 
-		CheckResult oldCheckResult = checkResultRepository.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now().minus(Duration.ofDays(31)), null));
+		CheckResult oldCheckResult = checkResultRepository
+				.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now().minus(Duration.ofDays(31)), null));
 
-		CheckResult recentCheckResult = checkResultRepository.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now(), null));
+		CheckResult recentCheckResult = checkResultRepository
+				.save(new CheckResult(monitor, "UP", 200, 100L, Instant.now(), null));
 
 		checkResultRetentionService.deleteExpiredCheckResults();
 

@@ -12,6 +12,7 @@ type Monitor = {
     fastestResponseTimeMs: number | null
     slowestResponseTimeMs: number | null
     latestErrorMessage: string | null
+    latestFailureReason: string | null
     lastFailureAt: string | null
 }
 

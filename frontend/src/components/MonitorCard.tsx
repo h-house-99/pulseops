@@ -1,5 +1,6 @@
 import type { CheckResult, Monitor } from '../types'
 import MonitorLatencyChart from './MonitorLatencyChart'
+import { canManageMonitors } from '../config'
 
 type MonitorCardProps = {
   monitor: Monitor
@@ -77,14 +78,14 @@ function MonitorCard({
         </div>
 
         <div className="monitor-meta">
-          <button
+          {canManageMonitors && <button
             className="icon-button"
             aria-label={`Check ${monitor.name} now`}
             onClick={() => onCheckNow(monitor.id)}
             disabled={isChecking}
           >
             {isChecking ? '...' : '↻'}
-          </button>
+          </button>}
           <span className={`status-pill status-${monitor.status.toLowerCase()}`}>
             {monitor.status}
           </span>
@@ -96,23 +97,15 @@ function MonitorCard({
           >
             {isExpanded ? '⌃' : '⌄'}
           </button>
-          <button
+          {canManageMonitors && <button
             className="icon-button danger-button"
             aria-label={`Delete ${monitor.name}`}
             onClick={onDeleteMonitor}
           >
             ×
-          </button>
+          </button>}
         </div>
       </div>
-
-      {monitor.status === 'DOWN' && monitor.latestErrorMessage && (
-        <>
-          <p className="monitor-summary-latest-error">
-            <strong>Error:</strong> {monitor.latestErrorMessage}
-          </p>
-        </>
-      )}
 
       {isExpanded && (
         <>
@@ -150,9 +143,9 @@ function MonitorCard({
             </p>
           )}
 
-          {monitor.latestErrorMessage && (
+          {monitor.latestFailureReason && (
             <p className="monitor-summary-latest-error">
-              <strong>Failure reason:</strong> {monitor.latestErrorMessage}
+              <strong>Failure reason:</strong> {monitor.latestFailureReason}
             </p>
           )}
         </>
