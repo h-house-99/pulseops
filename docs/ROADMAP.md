@@ -28,6 +28,8 @@ PulseOps currently supports:
 - block backend create, manual check, and delete endpoints in read-only mode with `PULSEOPS_READ_ONLY_MODE`
 - seed a curated monitor list on startup when `PULSEOPS_SEED_CURATED_MONITORS=true` and the database is empty
 - serve the same curated catalog from `GET /api/public-apis`
+- configure the frontend API base URL with `VITE_API_BASE_URL`
+- configure backend CORS allowed origins with `PULSEOPS_CORS_ALLOWED_ORIGINS`
 
 A frontend discovery flow can be added later.
 
@@ -48,7 +50,7 @@ PulseOps does not include these yet:
 
 ## Recommended Next
 
-1. Add `VITE_API_BASE_URL` and production CORS configuration for deployment.
+1. Deploy the read-only demo with production frontend and backend env vars.
 2. Clamp chart tooltips near left and right chart edges.
 3. Update the dashboard screenshot in `docs/assets/` to match the current UI.
 
@@ -56,8 +58,8 @@ PulseOps does not include these yet:
 
 ### Deployment
 
-- Add `VITE_API_BASE_URL` for deployed frontend builds.
-- Allow the deployed frontend origin in backend CORS configuration.
+- Deploy frontend and backend with matching `VITE_API_BASE_URL`, `PULSEOPS_CORS_ALLOWED_ORIGINS`, `PULSEOPS_READ_ONLY_MODE`, and `PULSEOPS_SEED_CURATED_MONITORS` values.
+- Smoke test the deployed demo on a fresh database.
 
 ### Chart And Analytics
 
@@ -88,8 +90,8 @@ These dates are rough targets for keeping the MVP focused.
 | Target date | Work | Estimate |
 | --- | --- | --- |
 | June 10-14, 2026 | Finish 7d chart support, retention cleanup, failure reasons, chart caching, and dashboard layout polish | Done |
-| June 15-21, 2026 | Add read-only MVP controls and final dashboard polish | 2-3 sessions |
-| June 22-30, 2026 | Prepare read-only deployment config, curated monitors, environment variables, and production database setup | 2-4 sessions |
+| June 15-21, 2026 | Add read-only MVP controls, seeding, env-based API URL/CORS, and final dashboard polish | In progress |
+| June 22-30, 2026 | Deploy read-only demo, smoke test production monitors, and fix deployment issues | 2-4 sessions |
 | July 1-7, 2026 | Deploy MVP, smoke test real monitors, and fix deployment issues | 2-3 sessions |
 
 Anticipated MVP deployment target: **July 7, 2026**.

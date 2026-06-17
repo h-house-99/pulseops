@@ -28,9 +28,15 @@ Example environment values:
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/pulseops
 export SPRING_DATASOURCE_USERNAME=your_postgres_username
 export SPRING_DATASOURCE_PASSWORD=your_postgres_password
+export PULSEOPS_CORS_ALLOWED_ORIGINS=http://localhost:5173
 export PULSEOPS_READ_ONLY_MODE=false
 export PULSEOPS_SEED_CURATED_MONITORS=false
 ```
+
+`PULSEOPS_CORS_ALLOWED_ORIGINS` controls which frontend origin may call the API from the browser:
+
+- Local default: `http://localhost:5173`
+- Production: set this to your deployed frontend URL, for example `https://pulseops.example.com`
 
 `PULSEOPS_READ_ONLY_MODE` controls backend write access:
 
@@ -42,9 +48,10 @@ export PULSEOPS_SEED_CURATED_MONITORS=false
 - `false` (default): no monitors are inserted automatically.
 - `true`: inserts the curated monitor list when the database has no monitors yet.
 
-For the public demo on a fresh database, typical values are:
+For the public demo on a fresh database, typical backend values are:
 
 ```bash
+export PULSEOPS_CORS_ALLOWED_ORIGINS=https://your-frontend.example.com
 export PULSEOPS_SEED_CURATED_MONITORS=true
 export PULSEOPS_READ_ONLY_MODE=true
 ```
@@ -90,6 +97,7 @@ Run backend commands from `backend/`.
 | Run one test class | `./mvnw test -Dtest=MonitorApiIntegrationTest` |
 | Run read-only tests | `./mvnw test -Dtest=MonitorApiReadOnlyIntegrationTest` |
 | Run seeding tests | `./mvnw test -Dtest=MonitorApiSeedCuratedMonitorIntegrationTest` |
+| Run CORS tests | `./mvnw test -Dtest=CorsConfigIntegrationTest` |
 
 The API runs at `http://localhost:8080` by default.
 
@@ -109,7 +117,7 @@ Run frontend commands from `frontend/`.
 | Production build | `npm run build` |
 | Preview production build | `npm run preview` |
 
-The frontend runs at `http://localhost:5173` by default and calls the backend at `http://localhost:8080/api`.
+The frontend runs at `http://localhost:5173` by default. The API base URL comes from `VITE_API_BASE_URL`.
 
 Copy the frontend example environment file for local UI mode:
 
@@ -117,11 +125,17 @@ Copy the frontend example environment file for local UI mode:
 cp frontend/.env.example frontend/.env.local
 ```
 
-Example frontend values:
+Example local frontend values:
 
 ```bash
+VITE_API_BASE_URL=http://localhost:8080/api
 VITE_CAN_MANAGE_MONITORS=true
 ```
+
+`VITE_API_BASE_URL` controls where the frontend sends API requests:
+
+- Local default: `http://localhost:8080/api`
+- Production: set this before `npm run build`, for example `https://your-backend.example.com/api`
 
 `VITE_CAN_MANAGE_MONITORS` controls whether the dashboard shows create, check, and delete controls:
 
@@ -129,6 +143,15 @@ VITE_CAN_MANAGE_MONITORS=true
 - `false`: show Viewer mode for the public demo UI.
 
 This flag only affects the UI. Backend write protection still depends on `PULSEOPS_READ_ONLY_MODE`.
+
+Vite env vars are baked in at build time. Set production frontend env vars in the hosting platform before running `npm run build`.
+
+Example production frontend build values:
+
+```bash
+VITE_API_BASE_URL=https://your-backend.example.com/api
+VITE_CAN_MANAGE_MONITORS=false
+```
 
 ## Full Stack Startup
 

@@ -36,7 +36,12 @@ Example `403` response body:
 }
 ```
 
-The frontend uses a separate UI flag, `VITE_CAN_MANAGE_MONITORS`, to hide create, check, and delete controls. Backend read-only mode is the real enforcement layer.
+The frontend uses separate UI flags:
+
+- `VITE_CAN_MANAGE_MONITORS` hides create, check, and delete controls.
+- `VITE_API_BASE_URL` sets the backend API base URL, for example `http://localhost:8080/api`.
+
+Backend read-only mode is the real enforcement layer.
 
 ## Curated Monitor Seeding
 
