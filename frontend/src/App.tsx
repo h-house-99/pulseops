@@ -3,10 +3,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import MonitorForm from './components/MonitorForm'
 import MonitorCard from './components/MonitorCard'
 import type { Monitor, CheckResult } from './types'
-import { canManageMonitors } from './config'
+import { canManageMonitors, apiBaseUrl } from './config'
 type ChartCacheKey = `${number}-${number}`
 
-const BASE_URL = 'http://localhost:8080/api'
 const MONITOR_REFRESH_INTERVAL_MS = 60_000
 const SEVEN_DAY_CHART_TTL_MS = 60 * 60 * 1000 // 1 hour
 const SEVEN_DAY_WINDOW_HOURS = 168
@@ -61,7 +60,7 @@ function App() {
   }, [cachedChartFetchedAtByKey])
 
   const fetchMonitors = useCallback(async () => {
-    const response = await fetch(`${BASE_URL}/monitors`)
+    const response = await fetch(`${apiBaseUrl}/monitors`)
 
     if (!response.ok) {
       throw new Error('Could not load monitors.')
@@ -73,7 +72,7 @@ function App() {
   }, [])
 
   const fetchChartChecks = useCallback(async (monitorId: number, windowHours: number) => {
-    const response = await fetch(`${BASE_URL}/monitors/${monitorId}/checks?hours=${windowHours}`)
+    const response = await fetch(`${apiBaseUrl}/monitors/${monitorId}/checks?hours=${windowHours}`)
     if (!response.ok) {
       throw new Error('Could not load check results.')
     }
@@ -125,7 +124,7 @@ function App() {
     try {
       setErrorMessage(null)
       setCheckingMonitorIds((currentValues) => [...currentValues, monitorId])
-      const response = await fetch(`${BASE_URL}/monitors/${monitorId}/check-now`,
+      const response = await fetch(`${apiBaseUrl}/monitors/${monitorId}/check-now`,
         {
           method: 'POST',
         }
@@ -163,7 +162,7 @@ function App() {
 
     try {
       setErrorMessage(null)
-      const response = await fetch(`${BASE_URL}/monitors`, {
+      const response = await fetch(`${apiBaseUrl}/monitors`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -224,7 +223,7 @@ function App() {
       if (!shouldDelete) {
         return
       }
-      const response = await fetch(`${BASE_URL}/monitors/${monitorId}`, {
+      const response = await fetch(`${apiBaseUrl}/monitors/${monitorId}`, {
         method: 'DELETE',
       })
       if (!(response.status === 204)) {

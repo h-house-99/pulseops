@@ -43,14 +43,21 @@ PostgreSQL stores monitored endpoints and historical check results. Tests use H2
 4. Shorter windows (`1`, `8`, `24`) are refreshed on dashboard poll so expanded charts stay live.
 5. The `7d` window (`hours=168`) uses a 1-hour frontend TTL so repeated window toggles and polls do not refetch large history payloads unnecessarily.
 
-## Read-Only Demo Mode
+## Deployment Configuration
 
-PulseOps uses two environment flags for the public demo:
+PulseOps uses environment-driven configuration for the public demo and local development.
 
 | Layer | Flag | Purpose |
 | --- | --- | --- |
+| Frontend | `VITE_API_BASE_URL` | Sets the backend API base URL used by dashboard fetches |
 | Frontend | `VITE_CAN_MANAGE_MONITORS` | Hides create, check, and delete UI actions |
+| Backend | `PULSEOPS_CORS_ALLOWED_ORIGINS` | Allows the deployed frontend origin to call the API from the browser |
 | Backend | `PULSEOPS_READ_ONLY_MODE` | Blocks write API calls with `403 Forbidden` |
+| Backend | `PULSEOPS_SEED_CURATED_MONITORS` | Seeds curated monitors when the database is empty |
+
+Backend flags are read at startup through `PulseOpsConfig`. Frontend flags are read by Vite at dev-server startup or production build time.
+
+## Read-Only Demo Mode
 
 Read-only enforcement lives in `MonitorService`. User-triggered write methods call `ensureMonitorManagementAllowed()` before creating monitors, running manual checks, or deleting monitors.
 
@@ -59,7 +66,37 @@ When read-only mode is enabled:
 - `POST /api/monitors`, `POST /api/monitors/{id}/check-now`, and `DELETE /api/monitors/{id}` are rejected.
 - `GET /api/monitors`, chart history endpoints, health checks, and scheduled background checks continue to work.
 
-Local development usually keeps backend read-only off and frontend management UI on. The deployed demo should set `PULSEOPS_READ_ONLY_MODE=true` and `VITE_CAN_MANAGE_MONITORS=false`.
+Local development usually keeps backend read-only off, seeding off, and frontend management UI on. The deployed demo should set:
+
+- `VITE_API_BASE_URL` to the production backend URL
+- `VITE_CAN_MANAGE_MONITORS=false`
+- `PULSEOPS_CORS_ALLOWED_ORIGINS` to the production frontend URL
+- `PULSEOPS_READ_ONLY_MODE=true`
+- `PULSEOPS_SEED_CURATED_MONITORS=true` on a fresh database
+
+## Curated Monitor Catalog And Seeding
+
+PulseOps keeps one curated API list in `CuratedMonitorDefinition`. That list is reused in two places:
+
+| Consumer | Purpose |
+| --- | --- |
+| `MonitorDataSeeder` | Inserts monitors into PostgreSQL when `PULSEOPS_SEED_CURATED_MONITORS=true` and the database is empty |
+| `PublicApiService` | Returns the same catalog from `GET /api/public-apis` |
+
+Seeding flow:
+
+1. Spring Boot starts and the application context is ready.
+2. `MonitorDataSeeder` runs as an `ApplicationRunner`.
+3. If seeding is disabled, it exits immediately.
+4. If monitors already exist, it exits without inserting duplicates.
+5. Otherwise it inserts the curated monitors with `status = "UNKNOWN"`.
+6. `MonitorCheckScheduler` checks them on the normal 5-minute schedule.
+
+Backend demo flags are managed together in `PulseOpsConfig`:
+
+- `PULSEOPS_CORS_ALLOWED_ORIGINS`
+- `PULSEOPS_READ_ONLY_MODE`
+- `PULSEOPS_SEED_CURATED_MONITORS`
 
 ## Data Model
 
@@ -116,15 +153,13 @@ Fields:
 
 ### PublicApi
 
-Represents a curated API option returned by the backend. These records are currently static backend responses and can later power a frontend discovery flow.
+Represents a curated API option returned by `GET /api/public-apis`. These records are mapped from `CuratedMonitorDefinition` and can later power a frontend discovery flow.
 
 Fields:
 
 - `id`
 - `name`
-- `description`
 - `url`
-- `category`
 
 ## Relationships
 

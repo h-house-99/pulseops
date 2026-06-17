@@ -36,7 +36,42 @@ Example `403` response body:
 }
 ```
 
-The frontend uses a separate UI flag, `VITE_CAN_MANAGE_MONITORS`, to hide create, check, and delete controls. Backend read-only mode is the real enforcement layer.
+The frontend uses separate UI flags:
+
+- `VITE_CAN_MANAGE_MONITORS` hides create, check, and delete controls.
+- `VITE_API_BASE_URL` sets the backend API base URL, for example `http://localhost:8080/api`.
+
+Backend read-only mode is the real enforcement layer.
+
+## Curated Monitor Seeding
+
+PulseOps can seed a curated monitor list into an empty database on startup. This is intended for demo and production deployments so the dashboard has monitors without manual `POST` requests.
+
+Configuration:
+
+```properties
+pulseops.seed-curated-monitors=${PULSEOPS_SEED_CURATED_MONITORS:false}
+```
+
+Set `PULSEOPS_SEED_CURATED_MONITORS=true` when deploying to a fresh database.
+
+When seeding is enabled:
+
+- Seeding runs once at startup through `MonitorDataSeeder`.
+- Monitors are inserted only when the `monitors` table is empty.
+- Seeded monitors start with `status: "UNKNOWN"` until the scheduler or a manual check runs.
+- Scheduled background checks continue to run normally after seeding.
+- Seeding bypasses read-only mode because it is internal startup logic, not a public API call.
+
+Current curated monitors:
+
+- GitHub API — `https://api.github.com`
+- OpenAI status — `https://status.openai.com/api/v2/status.json`
+- Discord status — `https://discordstatus.com/api/v2/status.json`
+- Cloudflare status — `https://www.cloudflarestatus.com/api/v2/status.json`
+- Cat Facts — `https://catfact.ninja/fact`
+- JSONPlaceholder — `https://jsonplaceholder.typicode.com/posts/1`
+- HTTPBin 500 — `https://httpbin.org/status/500`
 
 ## Status Rules
 
@@ -126,7 +161,7 @@ Example response:
 
 ## List Public APIs
 
-Returns a curated list of public APIs that can be added to monitoring.
+Returns the curated public API catalog. This list is sourced from the same definitions used for demo monitor seeding and can later power a frontend discovery flow.
 
 ```http
 GET /api/public-apis
@@ -139,12 +174,21 @@ Example response:
   {
     "id": 1,
     "name": "GitHub API",
-    "description": "Public GitHub REST API",
-    "url": "https://api.github.com",
-    "category": "Developer Tools"
+    "url": "https://api.github.com"
+  },
+  {
+    "id": 2,
+    "name": "OpenAI status",
+    "url": "https://status.openai.com/api/v2/status.json"
   }
 ]
 ```
+
+Notes:
+
+- `id` is a stable catalog index, not a monitor database id.
+- The response currently includes seven curated APIs.
+- `description` and `category` are not included yet and can be added later if the discovery UI needs them.
 
 ## Create Monitor
 

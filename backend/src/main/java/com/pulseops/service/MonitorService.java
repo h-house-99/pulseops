@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.pulseops.config.ReadOnlyModeConfig;
+import com.pulseops.config.PulseOpsConfig;
 import com.pulseops.entity.CheckResult;
 import com.pulseops.entity.Monitor;
 import com.pulseops.model.CheckResultResponse;
@@ -30,14 +30,14 @@ public class MonitorService {
     private final CheckResultRepository checkResultRepository;
     private final FailureReasonMapper failureReasonMapper;
     private static final Logger logger = LoggerFactory.getLogger(MonitorService.class);
-    private final ReadOnlyModeConfig readOnlyModeConfig;
+    private final PulseOpsConfig pulseOpsConfig;
 
-    public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository, FailureReasonMapper failureReasonMapper, ReadOnlyModeConfig readOnlyModeConfig) {
+    public MonitorService(EndpointCheckClient endpointCheckClient, MonitorRepository monitorRepository, CheckResultRepository checkResultRepository, FailureReasonMapper failureReasonMapper, PulseOpsConfig pulseOpsConfig) {
         this.endpointCheckClient = endpointCheckClient;
         this.monitorRepository = monitorRepository;
         this.checkResultRepository = checkResultRepository;
         this.failureReasonMapper = failureReasonMapper;
-        this.readOnlyModeConfig = readOnlyModeConfig;
+        this.pulseOpsConfig = pulseOpsConfig;
     }
 
     public MonitorResponse createMonitor(CreateMonitorRequest request) {
@@ -153,7 +153,7 @@ public class MonitorService {
     }
 
     private void ensureMonitorManagementAllowed() {
-        if (readOnlyModeConfig.isReadOnlyMode()) {
+        if (pulseOpsConfig.isReadOnlyMode()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Monitor management is not allowed in read-only mode");
         }
     }
