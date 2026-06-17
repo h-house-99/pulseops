@@ -11,11 +11,18 @@ public class PulseOpsConfig {
     @Value("${pulseops.seed-curated-monitors}")
     private boolean seedCuratedMonitors;
 
+    @Value("${pulseops.cors-allowed-origins}")
+    private String corsAllowedOrigins;
+
     public boolean isReadOnlyMode() {
         return readOnlyMode;
     }
 
     public boolean isSeedCuratedMonitors() {
         return seedCuratedMonitors;
+    }
+
+    public String getCorsAllowedOrigins() {
+        return corsAllowedOrigins;
     }
 }
