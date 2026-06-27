@@ -5,6 +5,7 @@ import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.net.http.HttpClient;
+import java.net.http.HttpTimeoutException;
 import java.nio.channels.UnresolvedAddressException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
@@ -60,7 +61,7 @@ public class RestClientEndpointCheckClient implements EndpointCheckClient {
                 return new EndpointCheckResult(null, "Connection refused");
             }
 
-            if (rootCause instanceof SocketTimeoutException) {
+            if (rootCause instanceof SocketTimeoutException || rootCause instanceof HttpTimeoutException) {
                 return new EndpointCheckResult(null, "Request timed out");
             }
 

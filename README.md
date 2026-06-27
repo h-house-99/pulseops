@@ -2,13 +2,15 @@
 
 PulseOps is a full-stack API monitoring dashboard built with a React frontend, a Spring Boot REST API, and PostgreSQL.
 
-PulseOps currently supports adding API monitors, running manual and scheduled health checks, storing check history, deleting monitors, and viewing status, latency, uptime percentage, response-time summaries, mapped failure reasons, last failure time, and selectable latency charts from the frontend.
+**Live demo:** [https://pulseops-u82b.onrender.com/](https://pulseops-u82b.onrender.com/)
 
-The roadmap tracks upcoming work such as richer uptime analytics, incident records, alerts, and AI-assisted incident summaries.
+PulseOps supports adding API monitors, running manual and scheduled health checks, storing check history, deleting monitors, and viewing status, latency, uptime percentage, response-time summaries, mapped failure reasons, last failure time, and selectable latency charts from the frontend. The public demo is read-only and monitors a curated set of real APIs on a 5-minute schedule.
+
+The roadmap tracks upcoming work such as discovery UI, uptime timelines, incident records, alerts, and optional self-hosting.
 
 ## Screenshots
 
-![PulseOps dashboard](docs/assets/pulseops-dashboard.jpg)
+![PulseOps dashboard](docs/assets/pulseops-dashboard.jpeg)
 
 ## Project Goal
 
@@ -24,7 +26,7 @@ Build a resume-ready app that demonstrates:
 
 ## Current Demo Story
 
-A user adds an API endpoint to the monitor list, runs a health check, and sees the latest status, response time, selected-window summary statistics, mapped failure reason, last failure time, and a selectable latency chart in a polished dashboard layout.
+A visitor opens the live dashboard and sees curated API monitors updating every 5 minutes with status, latency, uptime percentage, mapped failure reasons, and expandable latency charts. Local development still supports the full Admin flow: add a monitor, run a manual check, and inspect the same summaries in a polished dashboard layout.
 
 ## Tech Stack
 
@@ -73,4 +75,4 @@ The backend also exposes a curated public APIs endpoint that can be connected to
 
 ## What Is Next
 
-See the [Roadmap](docs/ROADMAP.md) for planned work and feature priorities. The next likely product step is preparing the dashboard for a read-only public demo.
+See the [Roadmap](docs/ROADMAP.md) for planned work and feature priorities. Likely next themes: demo polish (README screenshot, GitHub monitor tweak), a curated API discovery UI, or uptime timeline charts.

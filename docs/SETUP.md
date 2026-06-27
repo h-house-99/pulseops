@@ -159,3 +159,17 @@ VITE_CAN_MANAGE_MONITORS=false
 2. Start the backend from `backend/` with `./mvnw spring-boot:run`.
 3. Start the frontend from `frontend/` with `npm run dev`.
 4. Open `http://localhost:5173`.
+
+## Production Deployment
+
+Local setup above is for development. Production uses the same environment variable names with deployed URLs and demo flags.
+
+For the full production topology — Render services, Docker backend, Postgres, CORS, read-only mode, seeding, keep-alive cron, and request flow — see [Architecture → Production Deployment Architecture](ARCHITECTURE.md#production-deployment-architecture).
+
+Quick production checklist:
+
+1. Create Render Postgres and copy JDBC credentials into the backend service.
+2. Deploy the backend as a Docker web service from `backend/Dockerfile`.
+3. Deploy the frontend as a static site with `VITE_API_BASE_URL` pointing at the backend `/api` URL.
+4. Set backend demo flags: `PULSEOPS_READ_ONLY_MODE=true`, `PULSEOPS_SEED_CURATED_MONITORS=true`, and `PULSEOPS_CORS_ALLOWED_ORIGINS` to the frontend URL.
+5. Configure an external cron job to `GET /api/health` every 5–10 minutes so free-tier web services stay awake.
