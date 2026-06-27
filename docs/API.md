@@ -81,6 +81,8 @@ Monitor checks use these rules:
 - HTTP `400+` -> `DOWN` with the returned status code
 - timeout, DNS, connection, SSL, or other request failure -> `DOWN` with `statusCode: null` and an `errorMessage`
 
+The backend uses a 5 second connect timeout and 5 second read timeout for outbound checks. JDK `HttpTimeoutException` and `SocketTimeoutException` both map to `errorMessage: "Request timed out"` and user-facing failure reason `Request timed out`.
+
 ## Response Shapes
 
 ### Monitor
