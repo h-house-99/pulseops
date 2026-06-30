@@ -21,14 +21,17 @@ type CheckStats = {
   totalChecks: number
   uptimePercentage: number
   averageResponseTimeMs: number | null
-  fastestResponseTimeMs: number | null
   slowestResponseTimeMs: number | null
+  percentile95ResponseTimeMs: number | null
 }
 
 function getCheckStats(checks: CheckResult[]): CheckStats {
   const responseTimes = checks
     .map((check) => check.responseTimeMs)
     .filter((responseTime): responseTime is number => responseTime !== null)
+
+  const sortedResponseTimes = [...responseTimes].sort((a, b) => a - b)
+  const percentile95Index = Math.floor((sortedResponseTimes.length - 1) * 0.95)
 
   const upChecks = checks.filter((check) => check.status === 'UP').length
 
@@ -39,8 +42,8 @@ function getCheckStats(checks: CheckResult[]): CheckStats {
       responseTimes.length === 0
         ? null
         : Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length),
-    fastestResponseTimeMs: responseTimes.length === 0 ? null : Math.min(...responseTimes),
     slowestResponseTimeMs: responseTimes.length === 0 ? null : Math.max(...responseTimes),
+    percentile95ResponseTimeMs: sortedResponseTimes.length === 0 ? null : sortedResponseTimes[percentile95Index],
   }
 }
 
@@ -147,11 +150,11 @@ function MonitorCard({
                 <strong>{checkStats.averageResponseTimeMs === null ? '-' : `${checkStats.averageResponseTimeMs}ms`}</strong>
               </div>
               <div className="monitor-summary-stat">
-                <span>Fast</span>
-                <strong>{checkStats.fastestResponseTimeMs === null ? '-' : `${checkStats.fastestResponseTimeMs}ms`}</strong>
+                <span>P95</span>
+                <strong>{checkStats.percentile95ResponseTimeMs === null ? '-' : `${checkStats.percentile95ResponseTimeMs}ms`}</strong>
               </div>
               <div className="monitor-summary-stat">
-                <span>Slow</span>
+                <span>Max</span>
                 <strong>{checkStats.slowestResponseTimeMs === null ? '-' : `${checkStats.slowestResponseTimeMs}ms`}</strong>
               </div>
             </div>
