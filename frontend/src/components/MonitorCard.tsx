@@ -71,6 +71,8 @@ function MonitorCard({
   onDeleteMonitor,
 }: MonitorCardProps) {
   const checkStats = getCheckStats(chartChecks)
+  const hasFailureDetails = monitor.lastFailureAt || monitor.latestFailureReason
+  const isCurrentlyDown = monitor.status === 'DOWN'
 
   return (
     <div className="monitor-card">
@@ -160,16 +162,14 @@ function MonitorCard({
             </div>
           </div>
 
-          {monitor.lastFailureAt && (
-            <p className="monitor-summary-last-failure">
-              <strong>Last failure:</strong> {formatCheckedAt(monitor.lastFailureAt)}
-            </p>
-          )}
-
-          {monitor.latestFailureReason && (
-            <p className="monitor-summary-latest-error">
-              <strong>Failure reason:</strong> {monitor.latestFailureReason}
-            </p>
+          {hasFailureDetails && (
+            <div className={`monitor-failure-banner ${isCurrentlyDown ? 'monitor-failure-banner-active' : 'monitor-failure-banner-resolved'}`}>
+              <span>Last failure</span>
+              <strong>
+                {monitor.latestFailureReason ?? 'Failure recorded'}
+                {monitor.lastFailureAt ? ` · ${formatCheckedAt(monitor.lastFailureAt)}` : ''}
+              </strong>
+            </div>
           )}
         </>
       )}

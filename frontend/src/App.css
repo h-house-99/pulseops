@@ -152,16 +152,44 @@
   font-size: 15px;
 }
 
-.monitor-card .monitor-summary-last-failure {
-  margin-top: 10px;
-  color: #9d9fa1;
-  font-size: 11px;
+.monitor-failure-banner {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+  background: #2a1717;
 }
 
-.monitor-card .monitor-summary-latest-error {
-  margin-top: 8px;
+.monitor-failure-banner span {
   color: #fca5a5;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.monitor-failure-banner strong {
+  color: #fee2e2;
+  font-size: 13px;
+}
+
+.monitor-failure-banner-active {
+  border-color: #7f1d1d;
+  background: #2a1717;
+}
+
+.monitor-failure-banner-resolved {
+  border-color: #3c3d3d;
+  background: #212223;
+}
+
+.monitor-failure-banner-resolved span {
+  color: #9d9fa1;
+}
+
+.monitor-failure-banner-resolved strong {
+  color: #fca5a5;
 }
 
 .error-message {
