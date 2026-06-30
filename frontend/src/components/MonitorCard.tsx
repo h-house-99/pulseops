@@ -21,14 +21,17 @@ type CheckStats = {
   totalChecks: number
   uptimePercentage: number
   averageResponseTimeMs: number | null
-  fastestResponseTimeMs: number | null
   slowestResponseTimeMs: number | null
+  percentile95ResponseTimeMs: number | null
 }
 
 function getCheckStats(checks: CheckResult[]): CheckStats {
   const responseTimes = checks
     .map((check) => check.responseTimeMs)
     .filter((responseTime): responseTime is number => responseTime !== null)
+
+  const sortedResponseTimes = [...responseTimes].sort((a, b) => a - b)
+  const percentile95Index = Math.floor((sortedResponseTimes.length - 1) * 0.95)
 
   const upChecks = checks.filter((check) => check.status === 'UP').length
 
@@ -39,8 +42,8 @@ function getCheckStats(checks: CheckResult[]): CheckStats {
       responseTimes.length === 0
         ? null
         : Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length),
-    fastestResponseTimeMs: responseTimes.length === 0 ? null : Math.min(...responseTimes),
     slowestResponseTimeMs: responseTimes.length === 0 ? null : Math.max(...responseTimes),
+    percentile95ResponseTimeMs: sortedResponseTimes.length === 0 ? null : sortedResponseTimes[percentile95Index],
   }
 }
 
@@ -68,6 +71,8 @@ function MonitorCard({
   onDeleteMonitor,
 }: MonitorCardProps) {
   const checkStats = getCheckStats(chartChecks)
+  const hasFailureDetails = monitor.lastFailureAt || monitor.latestFailureReason
+  const isCurrentlyDown = monitor.status === 'DOWN'
 
   return (
     <div className="monitor-card">
@@ -130,23 +135,41 @@ function MonitorCard({
           )}
 
           <div className="monitor-summary">
-            <span>Uptime: {checkStats.uptimePercentage}%</span>
-            <span>Checks: {checkStats.totalChecks}</span>
-            <span>Avg: {checkStats.averageResponseTimeMs === null ? '-' : `${checkStats.averageResponseTimeMs}ms`}</span>
-            <span>Fast: {checkStats.fastestResponseTimeMs === null ? '-' : `${checkStats.fastestResponseTimeMs}ms`}</span>
-            <span>Slow: {checkStats.slowestResponseTimeMs === null ? '-' : `${checkStats.slowestResponseTimeMs}ms`}</span>
+            <div className="monitor-summary-header">
+              <span>Last {chartWindowHours === 168 ? '7 days' : chartWindowHours === 1 ? '1 hour' : `${chartWindowHours} hours`}</span>
+            </div>
+            <div className="monitor-summary-grid">
+              <div className="monitor-summary-stat">
+                <span>Uptime</span>
+                <strong>{checkStats.uptimePercentage}%</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Checks</span>
+                <strong>{checkStats.totalChecks}</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Avg</span>
+                <strong>{checkStats.averageResponseTimeMs === null ? '-' : `${checkStats.averageResponseTimeMs}ms`}</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>P95</span>
+                <strong>{checkStats.percentile95ResponseTimeMs === null ? '-' : `${checkStats.percentile95ResponseTimeMs}ms`}</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Max</span>
+                <strong>{checkStats.slowestResponseTimeMs === null ? '-' : `${checkStats.slowestResponseTimeMs}ms`}</strong>
+              </div>
+            </div>
           </div>
 
-          {monitor.lastFailureAt && (
-            <p className="monitor-summary-last-failure">
-              <strong>Last failure:</strong> {formatCheckedAt(monitor.lastFailureAt)}
-            </p>
-          )}
-
-          {monitor.latestFailureReason && (
-            <p className="monitor-summary-latest-error">
-              <strong>Failure reason:</strong> {monitor.latestFailureReason}
-            </p>
+          {hasFailureDetails && (
+            <div className={`monitor-failure-banner ${isCurrentlyDown ? 'monitor-failure-banner-active' : 'monitor-failure-banner-resolved'}`}>
+              <span>Last failure</span>
+              <strong>
+                {monitor.latestFailureReason ?? 'Failure recorded'}
+                {monitor.lastFailureAt ? ` · ${formatCheckedAt(monitor.lastFailureAt)}` : ''}
+              </strong>
+            </div>
           )}
         </>
       )}
