@@ -37,13 +37,13 @@ PulseOps currently supports:
 
 Live demo: [https://pulseops-u82b.onrender.com/](https://pulseops-u82b.onrender.com/)
 
-A frontend discovery flow can be added later.
-
 ## MVP Status
 
 The read-only public demo is **live**. Visitors see curated monitors, scheduled checks, uptime summaries, failure reasons, and latency charts without create/check/delete controls.
 
 Local development still supports the full Admin flow for learning and testing.
+
+The GitHub API monitor (`https://api.github.com`) is intentionally kept as-is. Intermittent `HTTP 403` responses from cloud IP rate limits are useful production noise and a good interview talking point.
 
 ## Current Limits
 
@@ -56,82 +56,127 @@ PulseOps does not include these yet:
 - production-grade security
 - AI incident analysis
 - self-hosted deployment docs beyond the Render path
+- a dedicated status timeline separate from the latency chart
+- P95 or other percentile stats in the monitor summary row (P95 is used internally for chart Y-axis scaling only)
 
 ## Recommended Next
 
-These are the highest-value next steps based on the current production deployment.
+Priority order based on production feedback and UI review (July 2026).
 
-### Resume and demo polish
+### 1. Expanded card UI polish (do first)
 
-1. Add the live demo link and a fresh screenshot to `README.md`.
-2. Update `docs/assets/pulseops-dashboard.jpg` to match the current UI.
-3. Consider swapping the GitHub monitor from `api.github.com` to `githubstatus.com` to reduce cloud IP `403` noise in uptime stats.
+The expanded monitor card works but the summary row feels unfinished: stats pills hug the left, window context is unclear, and failure text sits as loose lines below the chart.
 
-### Reliability and observability
+Planned improvements:
 
-1. Decide whether intermittent `Request cancelled` / `Request failed` checks need more mapping or are acceptable noise on free-tier hosting.
-2. Optionally make connect/read timeouts configurable instead of hard-coded 5 seconds.
-3. Review whether unmapped endpoint failures should stay at `warn` level now that common timeouts are mapped.
+- Replace the left-aligned pill row with a full-width stat grid or metric tiles (label + value)
+- Label stats with the selected chart window (for example, `Last 24h`) so window-scoped numbers feel intentional
+- Show **P95** latency in the summary row; chart code already computes P95 for axis scaling
+- Consider replacing **Fast** with P95, or tightening the row to `Uptime · Checks · Avg · P95 · Max`
+- Combine last failure time and failure reason into one compact alert-style banner
+- Update `docs/assets/pulseops-dashboard.jpg` after the pass
 
-### Product features (pick one theme next)
+### 2. Status timeline strip (high-value monitoring feature)
 
-1. **Discovery flow** — wire `GET /api/public-apis` into the frontend so users can browse curated APIs.
-2. **Uptime timeline** — status-over-time chart alongside latency.
-3. **Incidents** — group consecutive `DOWN` checks into a simple incident record.
-4. **Alerts** — email or webhook when a monitor flips to `DOWN`.
+The latency chart answers “how fast?” A **status timeline** answers “when was it down?”
 
-### Engineering cleanup
+Planned shape:
 
-1. Clamp chart tooltips near left and right chart edges.
-2. Move frontend API calls into a small API module and extract dashboard/chart hooks from `App.tsx`.
-3. Add a combined history endpoint that returns checks plus summary stats for a time window.
+- Thin green/red segment bar under the latency chart, sharing the same time axis
+- Each check becomes a visible UP/DOWN segment
+- Makes blips like GitHub `HTTP 403` obvious without reading failure text
+
+This is separate from the existing latency line chart, which already encodes status as dot color.
+
+### 3. Overview / density improvements
+
+On shorter viewports (for example Mac mini), only one expanded monitor fits comfortably because each card stacks window toggles, chart, stats, and failure info.
+
+Planned options (pick one or combine):
+
+- Collapsed cards show mini summary: status, window uptime, optional sparkline
+- Optional accordion behavior: expanding one monitor collapses others
+- Responsive chart height tweaks for medium-height viewports
+
+### 4. Resume and demo polish
+
+- Live demo link is in `README.md`; refresh screenshot after UI polish
+- Optional per-monitor blurbs for curated APIs (for example, why GitHub may show `HTTP 403`)
+- Optional outbound links to official vendor status pages
+
+### 5. Product features (pick one theme after UI polish)
+
+| Feature | What it is | Demo value |
+| --- | --- | --- |
+| **Curated API discovery UI** | Frontend browse/add flow wired to `GET /api/public-apis` | Higher in Admin/local mode; lower urgency for read-only demo |
+| **Basic incidents** | Group consecutive `DOWN` checks into a simple incident record | Strong ops story; best after a status timeline exists |
+| **Alerts** | Email or webhook on status flip | High value; needs delivery channel choice |
+| **Configurable timeouts / check interval** | Env-driven connect/read timeout and cron interval | Useful after more production observation |
+
+### 6. Reliability and observability (as needed)
+
+- Decide whether intermittent `Request cancelled` checks are acceptable noise on free-tier hosting
+- Review unmapped endpoint failure log levels now that `HttpTimeoutException` is mapped
+- Deploy the timeout mapping fix to production if not already live
+
+### 7. Engineering cleanup (when convenient)
+
+- Clamp chart tooltips near left and right chart edges
+- Move frontend API calls into a small API module and extract dashboard/chart hooks from `App.tsx`
+- Add a combined history endpoint that returns checks plus summary stats for a time window
+- Clean up chart time-window fallback so missing fetch timestamps do not use `0`
 
 ## Near-Term Backlog
 
 ### Chart and analytics
 
-- Clean up chart time-window fallback so missing fetch timestamps do not use `0`.
-- Add backend aggregation or rate limiting before exposing large public chart fetches.
+- Add backend aggregation or rate limiting before exposing large public chart fetches
+- Expose P50/P99 or error-rate counts if the summary row still feels thin after P95
 
 ### Dashboard polish
 
-- Recheck mobile chart spacing after desktop layout changes.
+- Recheck mobile and medium-height chart spacing after stat grid changes
 
 ### Deployment and hosting
 
-- Add optional self-hosting guide for always-on Linux hardware (HX310 path discussed in planning).
-- Evaluate paid Render tier or migration off Render before free Postgres expiry becomes a blocker.
+- Add optional self-hosting guide for always-on Linux hardware (HX310 path discussed in planning)
+- Evaluate paid Render tier or migration off Render before free Postgres expiry becomes a blocker
 
 ### Frontend code quality
 
-- Refactor `App.tsx` after MVP data flows settle.
-- Keep `App.tsx` mostly responsible for page layout and component wiring.
+- Refactor `App.tsx` after MVP data flows settle
+- Keep `App.tsx` mostly responsible for page layout and component wiring
 
 ## Planning Timeline
-
-Historical targets for context. Deployment landed in late June 2026.
 
 | Target date | Work | Status |
 | --- | --- | --- |
 | June 10-14, 2026 | 7d charts, retention cleanup, failure reasons, chart caching, layout polish | Done |
 | June 15-21, 2026 | Read-only MVP controls, seeding, env-based API URL/CORS | Done |
 | June 22-30, 2026 | Deploy read-only demo, smoke test production monitors | Done |
-| July 2026 | Demo polish, roadmap feature pick, optional self-hosting exploration | Next |
+| July 2026 (early) | Expanded card UI polish, P95 in summary, fresh screenshot | Next |
+| July 2026 (mid) | Status timeline strip and/or overview card density | Planned |
+| July 2026 (late) | Pick next product theme (discovery UI, incidents, or alerts) | Planned |
 
 ## Next Features
 
-Candidate features to choose from for the next development cycle:
-
 | Feature | Why it might be next | Effort |
 | --- | --- | --- |
-| README + screenshot refresh | Quick resume win; documents the live demo | Small |
-| Swap GitHub to status page URL | Cleaner production uptime on Render | Small |
-| Curated API discovery UI | Uses existing backend catalog; visible product feature | Medium |
-| Uptime/status timeline chart | Complements latency charts; good demo story | Medium |
-| Configurable check interval / timeout | Useful after seeing real production noise | Medium |
-| Basic incident records | Natural follow-on once timeline exists | Medium–Large |
-| Alerts / notifications | High product value; needs delivery channel choice | Large |
+| Stat grid + window labels + failure banner | Fixes the “noobish” summary row; quick visual upgrade | Small |
+| P95 in summary row | Reuses existing chart math; better ops metric than min/max | Small |
+| Fresh dashboard screenshot | Resume/demo polish after UI pass | Small |
+| Status timeline strip | Makes UP/DOWN history scannable; complements latency chart | Medium |
+| Collapsed overview / accordion cards | Better use of vertical space on smaller screens | Medium |
+| Curated API discovery UI | Browse/add from `GET /api/public-apis`; backend already exists | Medium |
+| Per-monitor demo blurbs + status page links | Turns curated list into a learning demo | Small–Medium |
+| Basic incident records | Follow-on after status timeline | Medium–Large |
+| Configurable check interval / timeout | Production tuning | Medium |
+| Alerts / notifications | Needs delivery channel choice | Large |
 | Self-hosting on Linux | Removes Render sleep/DB expiry; more ops learning | Large |
+
+## Deferred / Not Planned
+
+- Swapping GitHub from `api.github.com` to `githubstatus.com` — kept for interview and production-rate-limit storytelling
 
 ## Later Ideas
 

@@ -111,21 +111,45 @@
 }
 
 .monitor-summary {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 12px;
-  margin-top: 8px;
-  color: #9d9fa1;
-  font-size: 13px;
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
   margin-bottom: 12px;
 }
 
-.monitor-summary span {
-  padding: 4px 8px;
+.monitor-summary-header {
+  color: #7a8293;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.monitor-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.monitor-summary-stat {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #3c3d3d;
   border-radius: 8px;
   background: #212223;
-  border: 1px solid #3c3d3d;
+}
+
+.monitor-summary-stat span {
+  color: #7a8293;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.monitor-summary-stat strong {
+  color: #f3f4f6;
+  font-size: 15px;
 }
 
 .monitor-card .monitor-summary-last-failure {
@@ -367,5 +391,9 @@
   
     .monitor-latency-chart-state {
       min-height: 140px;
+    }
+
+    .monitor-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

@@ -130,11 +130,31 @@ function MonitorCard({
           )}
 
           <div className="monitor-summary">
-            <span>Uptime: {checkStats.uptimePercentage}%</span>
-            <span>Checks: {checkStats.totalChecks}</span>
-            <span>Avg: {checkStats.averageResponseTimeMs === null ? '-' : `${checkStats.averageResponseTimeMs}ms`}</span>
-            <span>Fast: {checkStats.fastestResponseTimeMs === null ? '-' : `${checkStats.fastestResponseTimeMs}ms`}</span>
-            <span>Slow: {checkStats.slowestResponseTimeMs === null ? '-' : `${checkStats.slowestResponseTimeMs}ms`}</span>
+            <div className="monitor-summary-header">
+              <span>Last {chartWindowHours === 168 ? '7 days' : chartWindowHours === 1 ? '1 hour' : `${chartWindowHours} hours`}</span>
+            </div>
+            <div className="monitor-summary-grid">
+              <div className="monitor-summary-stat">
+                <span>Uptime</span>
+                <strong>{checkStats.uptimePercentage}%</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Checks</span>
+                <strong>{checkStats.totalChecks}</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Avg</span>
+                <strong>{checkStats.averageResponseTimeMs === null ? '-' : `${checkStats.averageResponseTimeMs}ms`}</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Fast</span>
+                <strong>{checkStats.fastestResponseTimeMs === null ? '-' : `${checkStats.fastestResponseTimeMs}ms`}</strong>
+              </div>
+              <div className="monitor-summary-stat">
+                <span>Slow</span>
+                <strong>{checkStats.slowestResponseTimeMs === null ? '-' : `${checkStats.slowestResponseTimeMs}ms`}</strong>
+              </div>
+            </div>
           </div>
 
           {monitor.lastFailureAt && (
